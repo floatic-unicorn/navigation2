@@ -223,7 +223,7 @@ void ObstacleLayer::onInitialize()
     if (data_type == "LaserScan") {
       auto sub = std::make_shared<message_filters::Subscriber<sensor_msgs::msg::LaserScan,
           rclcpp_lifecycle::LifecycleNode>>(node, topic, custom_qos_profile, sub_opt);
-      sub->unsubscribe();
+      // sub->unsubscribe();
 
       auto filter = std::make_shared<tf2_ros::MessageFilter<sensor_msgs::msg::LaserScan>>(
         *sub, *tf_, global_frame_, 50,
@@ -252,7 +252,7 @@ void ObstacleLayer::onInitialize()
     } else {
       auto sub = std::make_shared<message_filters::Subscriber<sensor_msgs::msg::PointCloud2,
           rclcpp_lifecycle::LifecycleNode>>(node, topic, custom_qos_profile, sub_opt);
-      sub->unsubscribe();
+      // sub->unsubscribe();
 
       if (inf_is_valid) {
         RCLCPP_WARN(
@@ -711,7 +711,7 @@ ObstacleLayer::deactivate()
 {
   for (unsigned int i = 0; i < observation_subscribers_.size(); ++i) {
     if (observation_subscribers_[i] != NULL) {
-      observation_subscribers_[i]->unsubscribe();
+      // observation_subscribers_[i]->unsubscribe();
     }
   }
 }

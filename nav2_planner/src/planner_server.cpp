@@ -403,6 +403,10 @@ PlannerServer::computePlanThroughPoses()
       concat_path.poses.insert(
         concat_path.poses.end(), curr_path.poses.begin(), curr_path.poses.end());
       concat_path.header = curr_path.header;
+
+      if(i == 1){
+        break;
+      }
     }
 
     // Publish the plan for visualization purposes

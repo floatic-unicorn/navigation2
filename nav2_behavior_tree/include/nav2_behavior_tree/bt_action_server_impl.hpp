@@ -82,6 +82,8 @@ bool BtActionServer<ActionT>::on_configure()
       "-r",
       std::string("__node:=") +
       std::string(node->get_name()) + "_" + client_node_name + "_rclcpp_node",
+      "-r",
+      std::string("__ns:=") + node->get_namespace(), 
       "--"});
 
   // Support for handling the topic-based goal pose from rviz

@@ -63,7 +63,7 @@ inline BT::NodeStatus RemovePassedGoals::tick()
 
   double dist_to_goal;
   while (goal_poses.size() > 1) {
-    dist_to_goal = euclidean_distance(goal_poses[0].pose, current_pose.pose);
+    dist_to_goal = euclidean_distance(goal_poses[0].goal.pose, current_pose.pose);
 
     if (dist_to_goal > viapoint_achieved_radius_) {
       break;

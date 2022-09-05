@@ -350,6 +350,7 @@ PlannerServer::computePlanThroughPoses()
   auto goal = action_server_poses_->get_current_goal();
   auto result = std::make_shared<ActionThroughPoses::Result>();
   nav_msgs::msg::Path concat_path;
+  std::string curr_planner;
 
   try {
     if (isServerInactive(action_server_poses_) || isCancelRequested(action_server_poses_)) {
@@ -381,20 +382,20 @@ PlannerServer::computePlanThroughPoses()
       if (i == 0) {
         curr_start = start;
       } else {
-        curr_start = goal->goals[i - 1];
+        curr_start = goal->goals[i - 1].goal;
       }
-      curr_goal = goal->goals[i];
-
+      curr_goal = goal->goals[i].goal;
+      curr_planner = goal->goals[i].planner;
       // Transform them into the global frame
       if (!transformPosesToGlobalFrame(action_server_poses_, curr_start, curr_goal)) {
         return;
       }
 
       // Get plan from start -> goal
-      nav_msgs::msg::Path curr_path = getPlan(curr_start, curr_goal, goal->planner_id);
+      nav_msgs::msg::Path curr_path = getPlan(curr_start, curr_goal, curr_planner);
 
       // check path for validity
-      if (!validatePath(action_server_poses_, curr_goal, curr_path, goal->planner_id)) {
+      if (!validatePath(action_server_poses_, curr_goal, curr_path, curr_planner)) {
         return;
       }
 
@@ -423,8 +424,8 @@ PlannerServer::computePlanThroughPoses()
     RCLCPP_WARN(
       get_logger(),
       "%s plugin failed to plan through %zu points with final goal (%.2f, %.2f): \"%s\"",
-      goal->planner_id.c_str(), goal->goals.size(), goal->goals.back().pose.position.x,
-      goal->goals.back().pose.position.y, ex.what());
+      curr_planner.c_str(), goal->goals.size(), goal->goals.back().goal.pose.position.x,
+      goal->goals.back().goal.pose.position.y, ex.what());
     action_server_poses_->terminate_current();
   }
 }

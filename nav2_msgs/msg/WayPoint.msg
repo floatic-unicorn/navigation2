@@ -1,0 +1,3 @@
+string controller
+string planner
+geometry_msgs/PoseStamped goal

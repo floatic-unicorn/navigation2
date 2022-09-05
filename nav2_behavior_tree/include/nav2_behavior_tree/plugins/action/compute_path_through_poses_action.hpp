@@ -63,14 +63,11 @@ public:
     return providedBasicPorts(
       {
         BT::OutputPort<nav_msgs::msg::Path>("path", "Path created by ComputePathThroughPoses node"),
-        BT::InputPort<std::vector<geometry_msgs::msg::PoseStamped>>(
+        BT::InputPort<std::vector<nav2_msgs::msg::WayPoint>>(
           "goals",
           "Destinations to plan through"),
         BT::InputPort<geometry_msgs::msg::PoseStamped>(
-          "start", "Start pose of the path if overriding current robot pose"),
-        BT::InputPort<std::string>(
-          "planner_id", "",
-          "Mapped name to the planner plugin type to use"),
+          "start", "Start pose of the path if overriding current robot pose")
       });
   }
 };

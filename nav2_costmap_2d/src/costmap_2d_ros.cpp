@@ -74,7 +74,7 @@ Costmap2DROS::Costmap2DROS(
     "--ros-args", "-r", std::string("__ns:=") +
     nav2_util::add_namespaces(parent_namespace, local_namespace),
     "--ros-args", "-r", name + ":" + std::string("__node:=") + name
-  })),
+  }).use_global_arguments(true)),
   name_(name),
   parent_namespace_(parent_namespace),
   default_plugins_{"static_layer", "obstacle_layer", "inflation_layer"},

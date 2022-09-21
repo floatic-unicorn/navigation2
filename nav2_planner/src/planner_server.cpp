@@ -384,8 +384,13 @@ PlannerServer::computePlanThroughPoses()
       } else {
         curr_start = goal->goals[i - 1].goal;
       }
-      curr_goal = goal->goals[i].goal;
-      curr_planner = goal->goals[i].planner;
+      if(goal->goals.size() == 1){
+        curr_goal = goal->goals[i].goal;
+        curr_planner = goal->goals[i].planner;
+      } else {
+        curr_goal = goal->goals[i+1].goal;
+        curr_planner = goal->goals[i+1].planner;
+      }
       // Transform them into the global frame
       if (!transformPosesToGlobalFrame(action_server_poses_, curr_start, curr_goal)) {
         return;
@@ -403,8 +408,8 @@ PlannerServer::computePlanThroughPoses()
       concat_path.poses.insert(
         concat_path.poses.end(), curr_path.poses.begin(), curr_path.poses.end());
       concat_path.header = curr_path.header;
-
-      if(i == 1){
+      
+      if(i == 1 && goal->goals.size() == 2){
         break;
       }
     }

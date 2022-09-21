@@ -409,7 +409,7 @@ PlannerServer::computePlanThroughPoses()
         concat_path.poses.end(), curr_path.poses.begin(), curr_path.poses.end());
       concat_path.header = curr_path.header;
       
-      if(i == 1 && goal->goals.size() == 2){
+      if(i == 1 || goal->goals.size() == 2){
         break;
       }
     }

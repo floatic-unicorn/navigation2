@@ -377,20 +377,20 @@ PlannerServer::computePlanThroughPoses()
     // Get consecutive paths through these points
     std::vector<geometry_msgs::msg::PoseStamped>::iterator goal_iter;
     geometry_msgs::msg::PoseStamped curr_start, curr_goal;
-    for (unsigned int i = 0; i != goal->goals.size(); i++) {
+    bool is_first = true;
+    for (unsigned int i = 0; i < goal->goals.size(); i++) {
       // Get starting point
       if (i == 0) {
         curr_start = start;
       } else {
         curr_start = goal->goals[i - 1].goal;
       }
-      if(goal->goals.size() == 1){
-        curr_goal = goal->goals[i].goal;
-        curr_planner = goal->goals[i].planner;
-      } else {
-        curr_goal = goal->goals[i+1].goal;
-        curr_planner = goal->goals[i+1].planner;
+      if(goal->goals.size() != 1 && is_first){
+        is_first = false;
+        i++;
       }
+      curr_goal = goal->goals[i].goal;
+      curr_planner = goal->goals[i].planner;
       // Transform them into the global frame
       if (!transformPosesToGlobalFrame(action_server_poses_, curr_start, curr_goal)) {
         return;
@@ -409,7 +409,7 @@ PlannerServer::computePlanThroughPoses()
         concat_path.poses.end(), curr_path.poses.begin(), curr_path.poses.end());
       concat_path.header = curr_path.header;
       
-      if(i == 1 || goal->goals.size() == 2){
+      if(goal->goals.size() == 2 || i == 2){
         break;
       }
     }

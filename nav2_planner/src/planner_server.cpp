@@ -385,9 +385,9 @@ PlannerServer::computePlanThroughPoses()
       } else {
         curr_start = goal->goals[i - 1].goal;
       }
-      if(goal->goals.size() != 1 && is_first){
+      if(is_first){
         is_first = false;
-        i++;
+        i = goal->goals.size() > 1 ? 1 : 0;
       }
       curr_goal = goal->goals[i].goal;
       curr_planner = goal->goals[i].planner;
@@ -409,7 +409,7 @@ PlannerServer::computePlanThroughPoses()
         concat_path.poses.end(), curr_path.poses.begin(), curr_path.poses.end());
       concat_path.header = curr_path.header;
       
-      if(goal->goals.size() == 2 || i == 2){
+      if(i == 1){
         break;
       }
     }

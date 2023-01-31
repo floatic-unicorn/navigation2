@@ -42,7 +42,7 @@ jobs:
           path: 'flody_ws/etc/'
       
       - name: AWS Mfa login
-        uses: ./.github/actions/aws-mfa-login
+        uses: ./flody_ws/etc/.github/actions/aws-mfa-login
         with:
           access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

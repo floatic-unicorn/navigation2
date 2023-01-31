@@ -49,6 +49,7 @@ jobs:
         run: |
           source /opt/floatic/debian/ros/humble/setup.bash
           cd flody_ws/etc
+          floom-release ros
           floom-generate rosdebian
           ls debian_results/*.deb
         shell: bash

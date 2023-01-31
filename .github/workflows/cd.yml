@@ -11,6 +11,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: PPA server access
+        uses: ./.github/actions/floatic-ppa-access
+        with:
+          target_group_name: ${{ secrets.SECURITY_GROUP_NAME }}
+          
       - name: AWS Mfa login
         uses: ./.github/actions/aws-mfa-login
         with:
@@ -40,10 +45,6 @@ jobs:
       - uses: actions/checkout@v3
         with:
           path: 'flody_ws/etc/'
-      - name: PPA server access
-        uses: ./.github/actions/floatic-ppa-access
-        with:
-          target_group_name: ${{ secrets.SECURITY_GROUP_NAME }}
 
       - name: Checkout submodules
         run: |

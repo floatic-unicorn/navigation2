@@ -40,6 +40,14 @@ jobs:
       - uses: actions/checkout@v3
         with:
           path: 'flody_ws/etc/'
+      
+      - name: AWS Mfa login
+        uses: ./.github/actions/aws-mfa-login
+        with:
+          access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          mfa_key: ${{ secrets.MFA_KEY }}
+          mfa_arn: ${{ secrets.MFA_ARN }}
 
       - name: PPA server access
         uses: ./flody_ws/etc/.github/actions/floatic-ppa-access

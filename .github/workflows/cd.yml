@@ -42,7 +42,7 @@ jobs:
           path: 'flody_ws/etc/'
 
       - name: PPA server access
-        uses: ./.github/actions/floatic-ppa-access
+        uses: ./flody_ws/etc/.github/actions/floatic-ppa-access
         with:
           target_group_name: ${{ secrets.SECURITY_GROUP_NAME }}
 

@@ -22,8 +22,8 @@ jobs:
       - id: get_ecr_password
         name: Get ECR password
         run: |
-          PROIFLE_REGION=$(aws configure get region --profile mfa)
-          ECR_PASSWORD=$(aws ecr get-login-password --region $PROIFLE_REGION --profile mfa)
+          PROIFLE_REGION=$(aws configure get region)
+          ECR_PASSWORD=$(aws ecr get-login-password --region $PROIFLE_REGION)
           echo "ECR_PASSWORD=$ECR_PASSWORD" >> $GITHUB_OUTPUT
     outputs:
       ecr_password: ${{ steps.get_ecr_password.outputs.ECR_PASSWORD }}

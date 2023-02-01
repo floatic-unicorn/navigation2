@@ -31,3 +31,4 @@ runs:
         run: |
           aws configure list
           aws ec2 revoke-security-group-ingress --group-name ${{ inputs.target_group_name }} --protocol ${{ inputs.protocol }} --port ${{ inputs.port }} --cidr ${{ steps.get_public_ip.outputs.ipv4 }}/32
+        shell: bash

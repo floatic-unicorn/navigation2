@@ -67,7 +67,7 @@ jobs:
       #     ls debian_results/*.deb
       #   shell: bash
       
-      - name: Upload to S3
-        run: |
-          ls flody_ws/etc/debian_results/
-          aws s3 cp flody_ws/etc/debian_results s3://robotics-workflow-archive/navigation2 --include "*.deb" --recursive
+      # - name: Upload to S3
+      #   run: |
+      #     ls flody_ws/etc/debian_results/
+      #     aws s3 cp flody_ws/etc/debian_results s3://robotics-workflow-archive/navigation2 --include "*.deb" --recursive

@@ -40,10 +40,10 @@ runs:
         echo ${accessKeyId}
         echo ${secretAccessKey}
         echo ${sessionToken}
-        aws configure set aws_access_key_id $accessKeyId --profile mfa
-        aws configure set aws_secret_access_key $secretAccessKey --profile mfa
-        aws configure set aws_session_token $sessionToken --profile mfa
-        aws configure set region ap-northeast-2 --profile mfa
+        aws configure set aws_access_key_id $accessKeyId
+        aws configure set aws_secret_access_key $secretAccessKey
+        aws configure set aws_session_token $sessionToken
+        aws configure set region ap-northeast-2
       shell: bash
-    - run: aws sts get-caller-identity --profile mfa
+    - run: aws sts get-caller-identity
       shell: bash

@@ -39,6 +39,7 @@ jobs:
     steps:
       - name: Update dist
         run: sudo apt update
+
       - uses: actions/checkout@v3
         with:
           path: 'flody_ws/etc/'

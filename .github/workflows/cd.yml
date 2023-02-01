@@ -1,7 +1,8 @@
 name: CD
-on: 
-  pull_request:
-    branches: [ humble-costmap ]
+on:
+  push:
+    tags:
+      - v*
 
 jobs:
   ecr_setting:

@@ -57,20 +57,20 @@ jobs:
         with:
           target_group_name: ${{ secrets.SECURITY_GROUP_NAME }}
 
-      # - name: Checkout submodules
-      #   run: |
-      #     cd flody_ws/etc
-      #     git submodule update --init --recursive
+      - name: Checkout submodules
+        run: |
+          cd flody_ws/etc
+          git submodule update --init --recursive
       
-      # - name: Generate debian file
-      #   run: |
-      #     source /opt/floatic/debian/ros/humble/setup.bash
-      #     cd flody_ws/etc
-      #     floom-generate rosdebian
-      #     ls debian_results/*.deb
-      #   shell: bash
+      - name: Generate debian file
+        run: |
+          source /opt/floatic/debian/ros/humble/setup.bash
+          cd flody_ws/etc
+          floom-generate rosdebian
+          ls debian_results/*.deb
+        shell: bash
       
-      # - name: Upload to S3
-      #   run: |
-      #     ls flody_ws/etc/debian_results/
-      #     aws s3 cp flody_ws/etc/debian_results s3://robotics-workflow-archive/navigation2 --include "*.deb" --recursive
+      - name: Upload to S3
+        run: |
+          ls flody_ws/etc/debian_results/
+          aws s3 cp flody_ws/etc/debian_results s3://robotics-workflow-archive/navigation2 --include "*.deb" --recursive

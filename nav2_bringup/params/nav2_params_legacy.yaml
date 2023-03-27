@@ -108,7 +108,7 @@ bt_navigator_navigate_to_pose_rclcpp_node:
 controller_server:
   ros__parameters:
     use_sim_time: True
-    controller_frequency: 10.0
+    controller_frequency: 20.0
     min_x_velocity_threshold: 0.001
     min_y_velocity_threshold: 0.5
     min_theta_velocity_threshold: 0.001
@@ -132,11 +132,11 @@ controller_server:
       stateful: True
       plugin: "nav2_controller::SimpleGoalChecker"
       xy_goal_tolerance: 0.25
-      yaw_goal_tolerance: 1.25
+      yaw_goal_tolerance: 0.25
     # DWB parameters
     FollowPath:
-    # plugin: "dwb_core::DWBLocalPlanner"
-      plugin: "nav2_mpc_controller::MpcController"
+      plugin: "dwb_core::DWBLocalPlanner"
+    # plugin: "nav2_mpc_controller::MpcController"
       debug_trajectory_details: True
       min_vel_x: 0.0
       min_vel_y: 0.0
@@ -194,8 +194,7 @@ local_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 3.0
-        #inflation_radius: 0.55
-        inflation_radius: 0.25
+        inflation_radius: 0.55
       voxel_layer:
         plugin: "nav2_costmap_2d::VoxelLayer"
         enabled: True
@@ -253,14 +252,13 @@ global_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 3.0
-        #inflation_radius: 0.55
-        inflation_radius: 0.25
+        inflation_radius: 0.55
       always_send_full_costmap: True
 
 map_server:
   ros__parameters:
     use_sim_time: True
-    yaml_filename: "anderson_world.yaml"
+    yaml_filename: "turtlebot3_world.yaml"
 
 map_saver:
   ros__parameters:

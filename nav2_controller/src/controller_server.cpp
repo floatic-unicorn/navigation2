@@ -345,7 +345,7 @@ void ControllerServer::computeControl()
 {
   std::lock_guard<std::mutex> lock(dynamic_params_lock_);
 
-  RCLCPP_INFO(get_logger(), "Received a goal, begin computing control effort.");
+  RCLCPP_DEBUG(get_logger(), "Received a goal, begin computing control effort.");
 
   try {
     std::string c_name = action_server_->get_current_goal()->controller_id;

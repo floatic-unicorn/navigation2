@@ -412,7 +412,7 @@ PlannerServer::computePlanThroughPoses()
     result->planning_time = cycle_duration;
 
     if (max_planner_duration_ && cycle_duration.seconds() > max_planner_duration_) {
-      RCLCPP_WARN(
+      RCLCPP_DEBUG(
         get_logger(),
         "Planner loop missed its desired rate of %.4f Hz. Current loop rate is %.4f Hz",
         1 / max_planner_duration_, 1 / cycle_duration.seconds());

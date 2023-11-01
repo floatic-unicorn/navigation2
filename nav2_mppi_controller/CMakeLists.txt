@@ -31,6 +31,10 @@ set(dependencies_pkgs
   tf2_ros
 )
 
+include_directories(
+  include
+)
+
 foreach(pkg IN LISTS dependencies_pkgs)
   find_package(${pkg} REQUIRED)
 endforeach()

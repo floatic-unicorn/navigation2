@@ -173,7 +173,7 @@ protected:
       if (diff_dist - abs(sim_position_change) <= 0.) {
         break;
       }
-      can_free = !this->collision_checker_->isCollisionFree(pose2d, fetch_data);
+      can_free = this->collision_checker_->isCollisionFree(pose2d, fetch_data);
       fetch_data = false;
     }
     return can_free;

@@ -165,7 +165,6 @@ protected:
     geometry_msgs::msg::Pose2D init_pose = pose2d;
     bool can_free = false;
     bool fetch_data = true;
-    double sim_distance;
     while (cycle_count < max_cycle_count) {
       sim_position_change = cmd_vel->linear.x * (cycle_count / this->cycle_frequency_);
       sim_distance = distance + sim_position_change;

@@ -163,7 +163,7 @@ protected:
     const double diff_dist = abs(command_x_) - distance;
     const int max_cycle_count = static_cast<int>(this->cycle_frequency_ * simulate_ahead_time_);
     geometry_msgs::msg::Pose2D init_pose = pose2d;
-    bool fetch_data = true;
+    bool can_free = false;
     double sim_distance;
     while (cycle_count < max_cycle_count) {
       sim_position_change = cmd_vel->linear.x * (cycle_count / this->cycle_frequency_);
@@ -171,20 +171,12 @@ protected:
       pose2d.x = init_pose.x + sim_position_change * cos(init_pose.theta);
       pose2d.y = init_pose.y + sim_position_change * sin(init_pose.theta);
       cycle_count++;
-      RCLCPP_INFO(this->logger_, "sim dist : %f", sim_distance);
-      if(sim_distance < 0.05){
-        continue;
-      }
       if (diff_dist - abs(sim_position_change) <= 0.) {
         break;
       }
-
-      if (!this->collision_checker_->isCollisionFree(pose2d, fetch_data)) {
-        return false;
-      }
-      fetch_data = false;
+      can_free = !this->collision_checker_->isCollisionFree(pose2d, fetch_data);
     }
-    return true;
+    return can_free;
   }
 
   /**

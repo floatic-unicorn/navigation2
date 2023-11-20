@@ -171,9 +171,8 @@ protected:
       pose2d.x = init_pose.x + sim_position_change * cos(init_pose.theta);
       pose2d.y = init_pose.y + sim_position_change * sin(init_pose.theta);
       cycle_count++;
-
+      RCLCPP_INFO(this->logger_, "sim dist : %f", sim_distance);
       if(sim_distance < 0.05){
-        RCLCPP_INFO(this->logger_, "sim dist : %f", sim_distance);
         continue;
       }
       if (diff_dist - abs(sim_position_change) <= 0.) {

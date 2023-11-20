@@ -164,6 +164,7 @@ protected:
     const int max_cycle_count = static_cast<int>(this->cycle_frequency_ * simulate_ahead_time_);
     geometry_msgs::msg::Pose2D init_pose = pose2d;
     bool can_free = false;
+    bool fetch_data = true;
     double sim_distance;
     while (cycle_count < max_cycle_count) {
       sim_position_change = cmd_vel->linear.x * (cycle_count / this->cycle_frequency_);
@@ -175,6 +176,7 @@ protected:
         break;
       }
       can_free = !this->collision_checker_->isCollisionFree(pose2d, fetch_data);
+      fetch_data = false;
     }
     return can_free;
   }

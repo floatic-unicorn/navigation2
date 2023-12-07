@@ -52,6 +52,7 @@ BehaviorTreeEngine::run(
       }
       result = tree->tickRoot();
       onLoop();
+      loopRate.sleep();
       // if (!loopRate.sleep()) {
       //   RCLCPP_WARN(
       //     rclcpp::get_logger("BehaviorTreeEngine"),

@@ -18,7 +18,7 @@
 #include <memory>
 #include <utility>
 
-#include "spin.hpp"
+#include "nav2_behaviors/plugins/spin.hpp"
 #include "tf2/utils.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
 #include "nav2_util/node_utils.hpp"
@@ -168,7 +168,7 @@ bool Spin::isCollisionFree(
   const int max_cycle_count = static_cast<int>(cycle_frequency_ * simulate_ahead_time_);
   geometry_msgs::msg::Pose2D init_pose = pose2d;
   bool fetch_data = true;
-
+  bool can_free = true;
   while (cycle_count < max_cycle_count) {
     sim_position_change = cmd_vel->angular.z * (cycle_count / cycle_frequency_);
     pose2d.theta = init_pose.theta + sim_position_change;
@@ -177,13 +177,10 @@ bool Spin::isCollisionFree(
     if (abs(relative_yaw) - abs(sim_position_change) <= 0.) {
       break;
     }
-
-    if (!collision_checker_->isCollisionFree(pose2d, fetch_data)) {
-      return false;
-    }
+    can_free = collision_checker_->isCollisionFree(pose2d, fetch_data);
     fetch_data = false;
   }
-  return true;
+  return can_free;
 }
 
 }  // namespace nav2_behaviors

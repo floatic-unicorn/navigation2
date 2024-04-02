@@ -149,7 +149,7 @@ public:
   {
     unsigned char cost = 0;
     if (distance == 0) {
-      cost = LETHAL_OBSTACLE;
+      cost = INSCRIBED_INFLATED_OBSTACLE;
     } else if (distance * resolution_ <= inscribed_radius_) {
       cost = INSCRIBED_INFLATED_OBSTACLE;
     } else {

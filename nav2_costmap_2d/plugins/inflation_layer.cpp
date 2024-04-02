@@ -234,7 +234,7 @@ InflationLayer::updateCosts(
     for (int i = min_i; i < max_i; i++) {
       int index = static_cast<int>(master_grid.getIndex(i, j));
       unsigned char cost = master_array[index];
-      if (cost == LETHAL_OBSTACLE || (inflate_around_unknown_ && cost == NO_INFORMATION)) {
+      if ((cost == LETHAL_OBSTACLE || cost == MULTI_ROBOT_COST) || (inflate_around_unknown_ && cost == NO_INFORMATION)) {
         obs_bin.emplace_back(index, i, j, i, j);
       }
     }

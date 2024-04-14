@@ -39,8 +39,8 @@ jobs:
     container:
       image: ghcr.io/${{ github.repository }}:${{ github.ref_name }}
       credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.ghcr_token }}
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: "Check apt updates"
         id: check

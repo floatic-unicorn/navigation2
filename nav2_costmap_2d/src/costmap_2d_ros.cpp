@@ -77,7 +77,7 @@ Costmap2DROS::Costmap2DROS(
   })),
   name_(name),
   parent_namespace_(parent_namespace),
-  default_plugins_{"static_layer", "obstacle_layer", "inflation_layer"},
+  default_plugins_{"static_layer", "obstacle_layer", "inflation_layer","inverse_inflation_layer"},
   default_types_{
     "nav2_costmap_2d::StaticLayer",
     "nav2_costmap_2d::ObstacleLayer",

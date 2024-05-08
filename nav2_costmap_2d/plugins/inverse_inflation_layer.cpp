@@ -285,6 +285,12 @@ InverseInflationLayer::updateCosts(
       }
 
       // attempt to put the neighbors of the current cell onto the inflation list
+      if ((mx > sx && my > sy)
+       || (mx < sx && my > sy)
+       || (mx > sx && my < sy)
+       || (mx < sx && my < sy)){
+        continue;
+      }
       if (mx > 0) {
         enqueue(index - 1, mx - 1, my, sx, sy);
       }

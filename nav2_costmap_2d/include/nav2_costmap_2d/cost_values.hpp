@@ -44,7 +44,7 @@ static constexpr unsigned char LETHAL_OBSTACLE = 254;
 static constexpr unsigned char MULTI_ROBOT_COST = 253;
 static constexpr unsigned char INSCRIBED_INFLATED_OBSTACLE = 252;
 static constexpr unsigned char MAX_NON_OBSTACLE = 251;
-static constexpr unsigned char INVERSE_INFLATED_COST = 250;
+static constexpr unsigned char INVERSE_INFLATED_COST = 200;
 static constexpr unsigned char FREE_SPACE = 0;
 }
 #endif  // NAV2_COSTMAP_2D__COST_VALUES_HPP_

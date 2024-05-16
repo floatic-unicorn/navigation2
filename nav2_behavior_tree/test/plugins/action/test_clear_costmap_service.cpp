@@ -18,7 +18,7 @@
 #include <set>
 #include <string>
 
-#include "behaviortree_cpp_v3/bt_factory.h"
+#include "behaviortree_cpp/bt_factory.h"
 
 #include "../../test_service.hpp"
 #include "nav2_behavior_tree/plugins/action/clear_costmap_service.hpp"

@@ -21,7 +21,7 @@
 #include "nav_msgs/msg/path.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
 
-#include "behaviortree_cpp_v3/bt_factory.h"
+#include "behaviortree_cpp/bt_factory.h"
 
 #include "../../test_action_server.hpp"
 #include "nav2_behavior_tree/plugins/action/compute_path_to_pose_action.hpp"

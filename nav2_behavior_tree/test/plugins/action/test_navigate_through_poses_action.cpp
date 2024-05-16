@@ -23,7 +23,7 @@
 #include "geometry_msgs/msg/point.hpp"
 #include "geometry_msgs/msg/quaternion.hpp"
 
-#include "behaviortree_cpp_v3/bt_factory.h"
+#include "behaviortree_cpp/bt_factory.h"
 
 #include "../../test_action_server.hpp"
 #include "nav2_behavior_tree/plugins/action/navigate_through_poses_action.hpp"

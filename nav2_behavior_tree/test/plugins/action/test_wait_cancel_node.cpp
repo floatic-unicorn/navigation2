@@ -17,7 +17,7 @@
 #include <set>
 #include <string>
 
-#include "behaviortree_cpp_v3/bt_factory.h"
+#include "behaviortree_cpp/bt_factory.h"
 
 #include "../../test_action_server.hpp"
 #include "nav2_behavior_tree/plugins/action/wait_cancel_node.hpp"

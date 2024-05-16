@@ -20,7 +20,7 @@
 #include <vector>
 
 #include "rclcpp/rclcpp.hpp"
-#include "behaviortree_cpp_v3/utils/shared_library.h"
+#include "behaviortree_cpp/utils/shared_library.h"
 
 namespace nav2_behavior_tree
 {

@@ -35,8 +35,8 @@
  * Author: Eitan Marder-Eppstein
  *         David V. Lu!!
  *********************************************************************/
-#ifndef NAV2_COSTMAP_2D__INFLATION_LAYER_HPP_
-#define NAV2_COSTMAP_2D__INFLATION_LAYER_HPP_
+#ifndef NAV2_COSTMAP_2D__INVERSE_INFLATION_LAYER_HPP_
+#define NAV2_COSTMAP_2D__INVERSE_INFLATION_LAYER_HPP_
 
 #include <map>
 #include <vector>
@@ -74,22 +74,22 @@ public:
 };
 
 /**
- * @class InflationLayer
+ * @class InverseInflationLayer
  * @brief Layer to convolve costmap by robot's radius or footprint to prevent
  * collisions and largely simply collision checking
  */
-class InflationLayer : public Layer
+class InverseInflationLayer : public Layer
 {
 public:
   /**
     * @brief A constructor
     */
-  InflationLayer();
+  InverseInflationLayer();
 
   /**
     * @brief A destructor
     */
-  ~InflationLayer();
+  ~InverseInflationLayer();
 
   /**
    * @brief Initialization process of layer on startup
@@ -148,18 +148,18 @@ public:
   inline unsigned char computeCost(double distance) const
   {
     unsigned char cost = 0;
-    if (distance == 0) {
-      cost = INSCRIBED_INFLATED_OBSTACLE;
-    } else if (distance * resolution_ <= inscribed_radius_) {
-      cost = INSCRIBED_INFLATED_OBSTACLE;
-    } else {
       // make sure cost falls off by Euclidean distance
-      double factor =
-        exp(-1.0 * cost_scaling_factor_ * (distance * resolution_ - inscribed_radius_));
-      cost = static_cast<unsigned char>((INSCRIBED_INFLATED_OBSTACLE - 1) * factor);
+    if (distance * resolution_ >= boundary_radius_){
+      cost = INVERSE_INFLATED_COST; 
     }
+    else{
+      double factor = exp(-1.0 * cost_scaling_factor_ * (distance * resolution_));
+      cost = INVERSE_INFLATED_COST - static_cast<unsigned char>((INVERSE_INFLATED_COST - 1) * factor);
+    }
+    
     return cost;
   }
+
 
   // Provide a typedef to ease future code maintenance
   typedef std::recursive_mutex mutex_t;
@@ -244,7 +244,7 @@ protected:
   rcl_interfaces::msg::SetParametersResult
   dynamicParametersCallback(std::vector<rclcpp::Parameter> parameters);
 
-  double inflation_radius_, inscribed_radius_, cost_scaling_factor_;
+  double inflation_radius_, inscribed_radius_, cost_scaling_factor_, boundary_radius_;
   bool inflate_unknown_, inflate_around_unknown_;
   unsigned int cell_inflation_radius_;
   unsigned int cached_cell_inflation_radius_;

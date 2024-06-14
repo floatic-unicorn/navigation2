@@ -35,7 +35,7 @@
  * Author: Eitan Marder-Eppstein
  *         David V. Lu!!
  *********************************************************************/
-#include "nav2_costmap_2d/inflation_layer.hpp"
+#include "nav2_costmap_2d/inverse_inflation_layer.hpp"
 
 #include <limits>
 #include <map>
@@ -48,7 +48,7 @@
 #include "pluginlib/class_list_macros.hpp"
 #include "rclcpp/parameter_events_filter.hpp"
 
-PLUGINLIB_EXPORT_CLASS(nav2_costmap_2d::InflationLayer, nav2_costmap_2d::Layer)
+PLUGINLIB_EXPORT_CLASS(nav2_costmap_2d::InverseInflationLayer, nav2_costmap_2d::Layer)
 
 using nav2_costmap_2d::LETHAL_OBSTACLE;
 using nav2_costmap_2d::INSCRIBED_INFLATED_OBSTACLE;
@@ -58,7 +58,7 @@ using rcl_interfaces::msg::ParameterType;
 namespace nav2_costmap_2d
 {
 
-InflationLayer::InflationLayer()
+InverseInflationLayer::InverseInflationLayer()
 : inflation_radius_(0),
   inscribed_radius_(0),
   cost_scaling_factor_(0),
@@ -76,20 +76,21 @@ InflationLayer::InflationLayer()
   access_ = new mutex_t();
 }
 
-InflationLayer::~InflationLayer()
+InverseInflationLayer::~InverseInflationLayer()
 {
   dyn_params_handler_.reset();
   delete access_;
 }
 
 void
-InflationLayer::onInitialize()
+InverseInflationLayer::onInitialize()
 {
   declareParameter("enabled", rclcpp::ParameterValue(true));
   declareParameter("inflation_radius", rclcpp::ParameterValue(0.55));
   declareParameter("cost_scaling_factor", rclcpp::ParameterValue(10.0));
   declareParameter("inflate_unknown", rclcpp::ParameterValue(false));
   declareParameter("inflate_around_unknown", rclcpp::ParameterValue(false));
+  declareParameter("boundary_radius", rclcpp::ParameterValue(1.0));
 
   {
     auto node = node_.lock();
@@ -101,10 +102,11 @@ InflationLayer::onInitialize()
     node->get_parameter(name_ + "." + "cost_scaling_factor", cost_scaling_factor_);
     node->get_parameter(name_ + "." + "inflate_unknown", inflate_unknown_);
     node->get_parameter(name_ + "." + "inflate_around_unknown", inflate_around_unknown_);
+    node->get_parameter(name_ + "." + "boundary_radius", boundary_radius_);
 
     dyn_params_handler_ = node->add_on_set_parameters_callback(
       std::bind(
-        &InflationLayer::dynamicParametersCallback,
+        &InverseInflationLayer::dynamicParametersCallback,
         this, std::placeholders::_1));
   }
 
@@ -118,7 +120,7 @@ InflationLayer::onInitialize()
 }
 
 void
-InflationLayer::matchSize()
+InverseInflationLayer::matchSize()
 {
   std::lock_guard<Costmap2D::mutex_t> guard(*getMutex());
   nav2_costmap_2d::Costmap2D * costmap = layered_costmap_->getCostmap();
@@ -129,7 +131,7 @@ InflationLayer::matchSize()
 }
 
 void
-InflationLayer::updateBounds(
+InverseInflationLayer::updateBounds(
   double /*robot_x*/, double /*robot_y*/, double /*robot_yaw*/, double * min_x,
   double * min_y, double * max_x, double * max_y)
 {
@@ -162,7 +164,7 @@ InflationLayer::updateBounds(
 }
 
 void
-InflationLayer::onFootprintChanged()
+InverseInflationLayer::onFootprintChanged()
 {
   std::lock_guard<Costmap2D::mutex_t> guard(*getMutex());
   inscribed_radius_ = layered_costmap_->getInscribedRadius();
@@ -171,13 +173,13 @@ InflationLayer::onFootprintChanged()
   need_reinflation_ = true;
 
   RCLCPP_DEBUG(
-    logger_, "InflationLayer::onFootprintChanged(): num footprint points: %zu,"
+    logger_, "InverseInflationLayer::onFootprintChanged(): num footprint points: %zu,"
     " inscribed_radius_ = %.3f, inflation_radius_ = %.3f",
     layered_costmap_->getFootprint().size(), inscribed_radius_, inflation_radius_);
 }
 
 void
-InflationLayer::updateCosts(
+InverseInflationLayer::updateCosts(
   nav2_costmap_2d::Costmap2D & master_grid, int min_i, int min_j,
   int max_i,
   int max_j)
@@ -199,7 +201,7 @@ InflationLayer::updateCosts(
 
   if (seen_.size() != size_x * size_y) {
     RCLCPP_WARN(
-      logger_, "InflationLayer::updateCosts(): seen_ vector size is wrong");
+      logger_, "InverseInflationLayer::updateCosts(): seen_ vector size is wrong");
     seen_ = std::vector<bool>(size_x * size_y, false);
   }
 
@@ -234,7 +236,7 @@ InflationLayer::updateCosts(
     for (int i = min_i; i < max_i; i++) {
       int index = static_cast<int>(master_grid.getIndex(i, j));
       unsigned char cost = master_array[index];
-      if ((cost == LETHAL_OBSTACLE || cost == MULTI_ROBOT_COST) || (inflate_around_unknown_ && cost == NO_INFORMATION)) {
+      if (cost == LETHAL_OBSTACLE || (inflate_around_unknown_ && cost == NO_INFORMATION)) {
         obs_bin.emplace_back(index, i, j, i, j);
       }
     }
@@ -283,6 +285,12 @@ InflationLayer::updateCosts(
       }
 
       // attempt to put the neighbors of the current cell onto the inflation list
+      if ((mx > sx && my > sy)
+       || (mx < sx && my > sy)
+       || (mx > sx && my < sy)
+       || (mx < sx && my < sy)){
+        continue;
+      }
       if (mx > 0) {
         enqueue(index - 1, mx - 1, my, sx, sy);
       }
@@ -316,7 +324,7 @@ InflationLayer::updateCosts(
  * @param  src_y The y index of the obstacle point inflation started at
  */
 void
-InflationLayer::enqueue(
+InverseInflationLayer::enqueue(
   unsigned int index, unsigned int mx, unsigned int my,
   unsigned int src_x, unsigned int src_y)
 {
@@ -340,7 +348,7 @@ InflationLayer::enqueue(
 }
 
 void
-InflationLayer::computeCaches()
+InverseInflationLayer::computeCaches()
 {
   std::lock_guard<Costmap2D::mutex_t> guard(*getMutex());
   if (cell_inflation_radius_ == 0) {
@@ -378,7 +386,7 @@ InflationLayer::computeCaches()
 }
 
 int
-InflationLayer::generateIntegerDistances()
+InverseInflationLayer::generateIntegerDistances()
 {
   const int r = cell_inflation_radius_ + 2;
   const int size = r * 2 + 1;
@@ -422,7 +430,7 @@ InflationLayer::generateIntegerDistances()
   * @param event ParameterEvent message
   */
 rcl_interfaces::msg::SetParametersResult
-InflationLayer::dynamicParametersCallback(
+InverseInflationLayer::dynamicParametersCallback(
   std::vector<rclcpp::Parameter> parameters)
 {
   std::lock_guard<Costmap2D::mutex_t> guard(*getMutex());

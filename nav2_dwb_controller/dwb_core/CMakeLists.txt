@@ -46,6 +46,7 @@ add_library(dwb_core SHARED
   src/publisher.cpp
   src/illegal_trajectory_tracker.cpp
   src/trajectory_utils.cpp
+  src/follow_gap_method.cpp
 )
 
 ament_target_dependencies(dwb_core

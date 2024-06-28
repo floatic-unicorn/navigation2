@@ -53,12 +53,15 @@
 #include "nav_msgs/msg/path.hpp"
 #include "geometry_msgs/msg/twist_stamped.hpp"
 
+
+
 using nav2_util::declare_parameter_if_not_declared;
 using nav2_util::geometry_utils::euclidean_distance;
+fgm::FGM gapAngleFinder;
 
 namespace dwb_core
 {
-
+  
 DWBLocalPlanner::DWBLocalPlanner()
 : traj_gen_loader_("dwb_core", "dwb_core::TrajectoryGenerator"),
   critic_loader_("dwb_core", "dwb_core::TrajectoryCritic")
@@ -110,6 +113,9 @@ void DWBLocalPlanner::configure(
     rclcpp::ParameterValue(true));
 
   std::string traj_generator_name;
+  
+  gapAngleFinder.configure(costmap_ros_);
+
 
   double transform_tolerance;
   node->get_parameter(dwb_plugin_name_ + ".transform_tolerance", transform_tolerance);
@@ -295,10 +301,15 @@ DWBLocalPlanner::computeVelocityCommands(
   nav_2d_msgs::msg::Pose2DStamped goal_pose;
 
   prepareGlobalPlan(pose, transformed_plan, goal_pose);
-
   nav2_costmap_2d::Costmap2D * costmap = costmap_ros_->getCostmap();
+  
   std::unique_lock<nav2_costmap_2d::Costmap2D::mutex_t> lock(*(costmap->getMutex()));
-
+  geometry_msgs::msg::Pose resultFGM;
+  
+  resultFGM = gapAngleFinder.excute(transformed_plan);
+  goal_pose.pose.x = resultFGM.position.x;
+  goal_pose.pose.y = resultFGM.position.y;
+  transformed_plan.poses.back() = goal_pose.pose;
   for (TrajectoryCritic::Ptr & critic : critics_) {
     if (!critic->prepare(pose.pose, velocity, goal_pose.pose, transformed_plan)) {
       RCLCPP_WARN(rclcpp::get_logger("DWBLocalPlanner"), "A scoring function failed to prepare");
@@ -322,7 +333,7 @@ DWBLocalPlanner::computeVelocityCommands(
 
     pub_->publishLocalPlan(pose.header, best.traj);
     pub_->publishCostGrid(costmap_ros_, critics_);
-
+    pub_->publishFGM(transformed_plan.poses.back());
     return cmd_vel;
   } catch (const dwb_core::NoLegalTrajectoriesException & e) {
     nav_2d_msgs::msg::Twist2D empty_cmd;
@@ -543,6 +554,10 @@ DWBLocalPlanner::transformGlobalPlan(
   }
   return transformed_plan;
 }
+
+
+
+
 
 }  // namespace dwb_core
 

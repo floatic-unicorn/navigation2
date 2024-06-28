@@ -51,6 +51,7 @@
 #include "pluginlib/class_loader.hpp"
 #include "pluginlib/class_list_macros.hpp"
 
+#include "dwb_core/follow_gap_method.hpp"
 namespace dwb_core
 {
 
@@ -58,9 +59,12 @@ namespace dwb_core
  * @class DWBLocalPlanner
  * @brief Plugin-based flexible controller
  */
+
+
 class DWBLocalPlanner : public nav2_core::Controller
 {
 public:
+  
   /**
    * @brief Constructor that brings up pluginlib loaders
    */
@@ -202,7 +206,7 @@ protected:
   rclcpp::Duration transform_tolerance_{0, 0};
   bool shorten_transformed_plan_;
   double forward_prune_distance_;
-
+  
   /**
    * @brief try to resolve a possibly shortened critic name with the default namespaces and the suffix "Critic"
    *

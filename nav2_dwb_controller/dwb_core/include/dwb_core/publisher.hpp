@@ -46,6 +46,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/point_cloud2.hpp"
 #include "visualization_msgs/msg/marker_array.hpp"
+#include "visualization_msgs/msg/marker.hpp"
 #include "nav2_util/lifecycle_node.hpp"
 #include "builtin_interfaces/msg/duration.hpp"
 
@@ -97,7 +98,7 @@ public:
   void publishGlobalPlan(const nav_2d_msgs::msg::Path2D plan);
   void publishTransformedPlan(const nav_2d_msgs::msg::Path2D plan);
   void publishLocalPlan(const nav_2d_msgs::msg::Path2D plan);
-
+  void publishFGM(const geometry_msgs::msg::Pose2D goalPosition);
 protected:
   void publishTrajectories(const dwb_msgs::msg::LocalPlanEvaluation & results);
 
@@ -125,7 +126,7 @@ protected:
   std::shared_ptr<LifecyclePublisher<nav_msgs::msg::Path>> local_pub_;
   std::shared_ptr<LifecyclePublisher<visualization_msgs::msg::MarkerArray>> marker_pub_;
   std::shared_ptr<LifecyclePublisher<sensor_msgs::msg::PointCloud2>> cost_grid_pc_pub_;
-
+  std::shared_ptr<LifecyclePublisher<visualization_msgs::msg::Marker>> fgm_pub_;
   rclcpp_lifecycle::LifecycleNode::WeakPtr node_;
   rclcpp::Clock::SharedPtr clock_;
   std::string plugin_name_;

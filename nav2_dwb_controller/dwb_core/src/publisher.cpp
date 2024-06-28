@@ -45,7 +45,6 @@
 #include "nav2_util/node_utils.hpp"
 #include "sensor_msgs/msg/point_cloud2.hpp"
 #include "visualization_msgs/msg/marker_array.hpp"
-#include "visualization_msgs/msg/marker.hpp"
 
 using std::max;
 using std::string;
@@ -106,6 +105,7 @@ DWBPublisher::on_configure()
   transformed_pub_ = node->create_publisher<nav_msgs::msg::Path>("transformed_global_plan", 1);
   local_pub_ = node->create_publisher<nav_msgs::msg::Path>("local_plan", 1);
   marker_pub_ = node->create_publisher<visualization_msgs::msg::MarkerArray>("marker", 1);
+  fgm_pub_ = node->create_publisher<visualization_msgs::msg::Marker>("fgm", 1);
   cost_grid_pc_pub_ = node->create_publisher<sensor_msgs::msg::PointCloud2>("cost_cloud", 1);
 
   double marker_lifetime = 0.0;
@@ -124,7 +124,7 @@ DWBPublisher::on_activate()
   local_pub_->on_activate();
   marker_pub_->on_activate();
   cost_grid_pc_pub_->on_activate();
-
+  fgm_pub_->on_activate();
   return nav2_util::CallbackReturn::SUCCESS;
 }
 
@@ -137,7 +137,7 @@ DWBPublisher::on_deactivate()
   local_pub_->on_deactivate();
   marker_pub_->on_deactivate();
   cost_grid_pc_pub_->on_deactivate();
-
+  fgm_pub_->on_deactivate();
   return nav2_util::CallbackReturn::SUCCESS;
 }
 
@@ -150,10 +150,32 @@ DWBPublisher::on_cleanup()
   local_pub_.reset();
   marker_pub_.reset();
   cost_grid_pc_pub_.reset();
-
+  fgm_pub_.reset();
   return nav2_util::CallbackReturn::SUCCESS;
 }
-
+void
+DWBPublisher::publishFGM(const geometry_msgs::msg::Pose2D goalPosition)
+{
+  //RCLCPP_INFO(rclcpp::get_logger("c"),"1");
+  auto marker = visualization_msgs::msg::Marker();
+  marker.header.frame_id = "map";
+  marker.header.stamp = clock_->now();
+  marker.type = visualization_msgs::msg::Marker::CUBE;
+  marker.action =  visualization_msgs::msg::Marker::ADD;
+  marker.pose.position.x = goalPosition.x;
+  marker.pose.position.y = goalPosition.y;
+  marker.pose.position.z = 1;
+  marker.scale.x = 0.1;
+  marker.scale.y = 0.1;
+  marker.scale.z = 0.1;
+  marker.color.a = 1.0;
+  marker.color.r = 1.0;
+  marker.color.g = 0.0;
+  marker.color.b = 0.0;
+  //RCLCPP_INFO(rclcpp::get_logger("c"),"2");
+  fgm_pub_->publish(marker);
+  //RCLCPP_INFO(rclcpp::get_logger("c"),"3");
+}
 void
 DWBPublisher::publishEvaluation(std::shared_ptr<dwb_msgs::msg::LocalPlanEvaluation> results)
 {

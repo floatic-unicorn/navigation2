@@ -111,7 +111,9 @@ void DWBLocalPlanner::configure(
   declare_parameter_if_not_declared(
     node, dwb_plugin_name_ + ".short_circuit_trajectory_evaluation",
     rclcpp::ParameterValue(true));
-
+  declare_parameter_if_not_declared(
+    node, dwb_plugin_name_ + ".search_gap_angle",
+    rclcpp::ParameterValue(true));
   std::string traj_generator_name;
   
   gapAngleFinder.configure(costmap_ros_);
@@ -131,7 +133,7 @@ void DWBLocalPlanner::configure(
     dwb_plugin_name_ + ".short_circuit_trajectory_evaluation",
     short_circuit_trajectory_evaluation_);
   node->get_parameter(dwb_plugin_name_ + ".shorten_transformed_plan", shorten_transformed_plan_);
-
+  node->get_parameter(dwb_plugin_name_ + ".search_gap_angle", search_gap_angle_);
   pub_ = std::make_unique<DWBPublisher>(node, dwb_plugin_name_);
   pub_->on_configure();
 
@@ -304,12 +306,14 @@ DWBLocalPlanner::computeVelocityCommands(
   nav2_costmap_2d::Costmap2D * costmap = costmap_ros_->getCostmap();
   
   std::unique_lock<nav2_costmap_2d::Costmap2D::mutex_t> lock(*(costmap->getMutex()));
-  geometry_msgs::msg::Pose resultFGM;
-  
-  resultFGM = gapAngleFinder.excute(transformed_plan);
-  goal_pose.pose.x = resultFGM.position.x;
-  goal_pose.pose.y = resultFGM.position.y;
-  transformed_plan.poses.back() = goal_pose.pose;
+  if(search_gap_angle_)
+  {
+    geometry_msgs::msg::Pose resultFGM;
+    resultFGM = gapAngleFinder.excute(transformed_plan);
+    goal_pose.pose.x = resultFGM.position.x;
+    goal_pose.pose.y = resultFGM.position.y;
+    transformed_plan.poses.back() = goal_pose.pose;
+  }
   for (TrajectoryCritic::Ptr & critic : critics_) {
     if (!critic->prepare(pose.pose, velocity, goal_pose.pose, transformed_plan)) {
       RCLCPP_WARN(rclcpp::get_logger("DWBLocalPlanner"), "A scoring function failed to prepare");
@@ -333,7 +337,8 @@ DWBLocalPlanner::computeVelocityCommands(
 
     pub_->publishLocalPlan(pose.header, best.traj);
     pub_->publishCostGrid(costmap_ros_, critics_);
-    pub_->publishFGM(transformed_plan.poses.back());
+    if(search_gap_angle_)
+      pub_->publishFGM(transformed_plan.poses.back());
     return cmd_vel;
   } catch (const dwb_core::NoLegalTrajectoriesException & e) {
     nav_2d_msgs::msg::Twist2D empty_cmd;

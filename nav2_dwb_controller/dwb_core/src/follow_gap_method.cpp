@@ -22,14 +22,21 @@ namespace fgm
         
         costmap_ros_->getRobotPose(robotPose_);
         double robotHeading = tf2::getYaw(robotPose_.pose.orientation);
-        
+        // double q0 = robotPose_.pose.orientation.w;
+        // double q1 = robotPose_.pose.orientation.x;
+        // double q2 = robotPose_.pose.orientation.y;
+        // double q3 = robotPose_.pose.orientation.z;
+        // //double q_norm = std::sqrt(q1*q1 + q2*q2 + q3*q3 + q0*q0);
+        //double yaw = atan2f(2.0*(q0*q3+q1*q2),1.0-2.0*(q2*q2+q3*q3));
+
+        //RCLCPP_INFO(rclcpp::get_logger("CHECK"),"tf1 %.2f tf2%.2f",robotHeading,yaw);
         for(size_t i = 1; i<prunedPlan.poses.size(); i++)
         {
             pathLength += std::sqrt((prunedPlan.poses[i].x - prunedPlan.poses[i-1].x) * (prunedPlan.poses[i].x - prunedPlan.poses[i-1].x) 
             + (prunedPlan.poses[i].y - prunedPlan.poses[i-1].y) * (prunedPlan.poses[i].y - prunedPlan.poses[i-1].y));
         }
         pruneDistance_ = pathLength;
-        //pruneDistance_ = 3.0;
+        //pruneDistance_ = 1.5;
         initialize();
         classifyRays(obstacles,clearances);
         for(auto &clearance : clearances)
@@ -48,8 +55,8 @@ namespace fgm
                 goalRad = goalRad - 2*M_PI;
             else if(goalRad < -M_PI)
                 goalRad = goalRad + 2*M_PI;
-            goalPosition_.position.x = pruneDistance_ * cosf(goalRad) - pruneDistance_ * sinf(goalRad)+ robotPose_.pose.position.x;
-            goalPosition_.position.y = pruneDistance_ * sinf(goalRad) + pruneDistance_ * cosf(goalRad) + robotPose_.pose.position.y;
+            goalPosition_.position.x = pruneDistance_ * cosf(goalRad) + robotPose_.pose.position.x;
+            goalPosition_.position.y = pruneDistance_ * sinf(goalRad) + robotPose_.pose.position.y;
 
             RCLCPP_INFO(rclcpp::get_logger("FGM"), "Goal(%.2f)(%.2f,%2f) Pose(%.2f)(%.2f,%.2f)",
             goalRad,goalPosition_.position.x,goalPosition_.position.y,robotHeading,robotPose_.pose.position.x,robotPose_.pose.position.y);
@@ -99,7 +106,8 @@ namespace fgm
                     relOccupiedRad = relOccupiedRad + 2*M_PI;
                 if(relOccupiedRad > -M_PI_2 && relOccupiedRad < M_PI_2)
                 {
-                    if(costmap_->getCost(x,y) == nav2_costmap_2d::LETHAL_OBSTACLE)
+                    //if(costmap_->getCost(x,y) != nav2_costmap_2d::FREE_SPACE)
+                    if(costmap_->getCost(x,y) == nav2_costmap_2d::LETHAL_OBSTACLE )
                     {
                     int angle = ((relOccupiedRad+M_PI_2)/M_PI)*180;
                     distance_[angle] = std::min(distance_[angle],searchDist);

@@ -104,14 +104,15 @@ namespace fgm
                     relOccupiedRad = relOccupiedRad - 2*M_PI;
                 else if(relOccupiedRad < -M_PI)
                     relOccupiedRad = relOccupiedRad + 2*M_PI;
-                
-                    //if(costmap_->getCost(x,y) != nav2_costmap_2d::FREE_SPACE)
-                if(costmap_->getCost(x,y) == nav2_costmap_2d::LETHAL_OBSTACLE )
+                if(relOccupiedRad > -M_PI_2 && relOccupiedRad < M_PI_2)
                 {
-                int angle = ((relOccupiedRad)/M_PI)*180;
-                distance_[angle] = std::min(distance_[angle],searchDist);
+                    //if(costmap_->getCost(x,y) != nav2_costmap_2d::FREE_SPACE)
+                    if(costmap_->getCost(x,y) == nav2_costmap_2d::LETHAL_OBSTACLE )
+                    {
+                    int angle = ((relOccupiedRad+M_PI_2)/M_PI)*180;
+                    distance_[angle] = std::min(distance_[angle],searchDist);
+                    }
                 }
-                
 
             }
         }      
@@ -121,19 +122,19 @@ namespace fgm
     {
         int minAngle = 0;
         int maxAngle = 180;
-        double clearDistance = 3.0;
+        //double clearDistance = 3.0;
         int flagOfAngle[180] = {0};
         rays obstacle;
         rays clearance;
 
         for (int angle = minAngle; angle<maxAngle; angle++)
         {
-            if(distance_[angle] < 0.1 || distance_[angle] == pruneDistance_)
+            if(distance_[angle] < 0.05 || distance_[angle] == pruneDistance_)
             {
-                distance_[angle] = clearDistance;
+                distance_[angle] = pruneDistance_;
                 flagOfAngle[angle] = 0;
             }
-            else if(distance_[angle] > 0.1 && distance_[angle]<pruneDistance_)
+            else if(distance_[angle] > 0.05 && distance_[angle]<pruneDistance_)
             {
                 flagOfAngle[angle] = 1;
             }

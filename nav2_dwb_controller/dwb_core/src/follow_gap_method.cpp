@@ -104,15 +104,14 @@ namespace fgm
                     relOccupiedRad = relOccupiedRad - 2*M_PI;
                 else if(relOccupiedRad < -M_PI)
                     relOccupiedRad = relOccupiedRad + 2*M_PI;
-                if(relOccupiedRad > -M_PI_2 && relOccupiedRad < M_PI_2)
-                {
+                
                     //if(costmap_->getCost(x,y) != nav2_costmap_2d::FREE_SPACE)
-                    if(costmap_->getCost(x,y) == nav2_costmap_2d::LETHAL_OBSTACLE )
-                    {
-                    int angle = ((relOccupiedRad+M_PI_2)/M_PI)*180;
-                    distance_[angle] = std::min(distance_[angle],searchDist);
-                    }
+                if(costmap_->getCost(x,y) == nav2_costmap_2d::LETHAL_OBSTACLE )
+                {
+                int angle = ((relOccupiedRad)/M_PI)*180;
+                distance_[angle] = std::min(distance_[angle],searchDist);
                 }
+                
 
             }
         }      

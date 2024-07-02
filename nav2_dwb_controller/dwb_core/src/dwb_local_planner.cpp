@@ -312,6 +312,9 @@ DWBLocalPlanner::computeVelocityCommands(
     resultFGM = gapAngleFinder.excute(transformed_plan);
     goal_pose.pose.x = resultFGM.position.x;
     goal_pose.pose.y = resultFGM.position.y;
+    nav_2d_utils::transformPose(
+    tf_, costmap_ros_->getGlobalFrameID(), goal_pose,
+    goal_pose, transform_tolerance_);
     transformed_plan.poses.back() = goal_pose.pose;
   }
   for (TrajectoryCritic::Ptr & critic : critics_) {

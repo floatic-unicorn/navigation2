@@ -84,7 +84,7 @@ bool SpeedCritic::prepare(
   transformed_plan.poses.pop_back();
   double LookaheadDistance = hypot(transformed_plan.poses.back().x, transformed_plan.poses.back().y);
   curvature = fabs(transformed_plan.poses.back().y) / pow(LookaheadDistance,2);
-  RCLCPP_INFO(rclcpp::get_logger("dasd"),"L %f curvature %f",LookaheadDistance,curvature);
+  //RCLCPP_INFO(rclcpp::get_logger("dasd"),"L %f curvature %f",LookaheadDistance,curvature);
   // transformed_plan.header.frame_id = costmap_ros_->getGlobalFrameID();
   // transformed_plan.header.stamp = global_plan.header.stamp;
   // nav_2d_utils::transformPose(
@@ -118,7 +118,6 @@ bool SpeedCritic::prepare(
     
   //   error_accumulation+=fabs(error);
   // }
-  //RCLCPP_INFO(rclcpp::get_logger("dasd"),"error End");
   goal_pose = goal;
   return true;
 }

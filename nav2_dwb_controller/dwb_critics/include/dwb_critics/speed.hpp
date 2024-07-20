@@ -54,7 +54,7 @@ class SpeedCritic : public dwb_core::TrajectoryCritic
 {
 public:
   SpeedCritic()
-  : penalty_(1.0), max_speed_(1.0),distance_for_decel_around_goal_(1.0) {}
+  : straight_path_max_speed_scale_(1.0), straight_path_max_speed_(1.0),curve_path_min_speed_scale_(1.0), curve_path_min_speed_(1.0),distance_for_decel_around_goal_(1.0) {}
   void onInit() override;
   bool prepare(
     const geometry_msgs::msg::Pose2D & pose, const nav_2d_msgs::msg::Twist2D & vel,
@@ -62,9 +62,13 @@ public:
   double scoreTrajectory(const dwb_msgs::msg::Trajectory2D & traj) override;
 
 private:
-  double penalty_, max_speed_;
+
+  double straight_path_max_speed_scale_, straight_path_max_speed_;
+  double curve_path_min_speed_scale_, curve_path_min_speed_;
   double distance_for_decel_around_goal_;
   geometry_msgs::msg::Pose2D goal_pose;
+  double error_accumulation;
+  double curvature;
 };
 
 }  // namespace dwb_critics

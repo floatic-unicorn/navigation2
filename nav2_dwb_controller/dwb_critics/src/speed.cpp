@@ -89,11 +89,13 @@ bool SpeedCritic::prepare(
   for(auto point : transformed_plan.poses)
   {
     double distance = hypot(point.x,point.y);
+    curvature = fabs(point.y/pow(distance,2));
     if(distance > lookAheadDistance_)
     {
-      curvature = fabs(point.y/pow(distance,2));
+      //curvature = fabs(point.y/pow(distance,2));
       break;
     }
+
   }
   //RCLCPP_INFO(rclcpp::get_logger("dasd"),"L %f curvature %f",LookaheadDistance,curvature);
   // transformed_plan.header.frame_id = costmap_ros_->getGlobalFrameID();

@@ -89,7 +89,7 @@ bool SpeedCritic::prepare(
   for(auto point : transformed_plan.poses)
   {
     double distance = hypot(point.x,point.y);
-    if(distance > 0.6)
+    if(distance > 0.4)
     {
       curvature = fabs(point.y/pow(distance,2));
       break;

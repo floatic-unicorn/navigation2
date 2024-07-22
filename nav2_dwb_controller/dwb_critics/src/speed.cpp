@@ -157,8 +157,8 @@ double SpeedCritic::scoreTrajectory(const dwb_msgs::msg::Trajectory2D & traj)
   {
     
     cost = straight_path_max_speed_scale_ * (straight_path_max_speed_ - traj.velocity.x) 
-    + curve_path_min_speed_scale_*curvature_1*fabs(curve_path_min_speed_-traj.velocity.x) 
-    + curve_path_min_speed_scale_*curvature_2*fabs(curve_path_min_speed_-traj.velocity.x);
+    + curve_path_min_speed_scale_*(curvature_1+curvature_2)/2.0*fabs(curve_path_min_speed_-traj.velocity.x); 
+    //+ curve_path_min_speed_scale_*curvature_2*fabs(curve_path_min_speed_-traj.velocity.x);
     
   }
   else

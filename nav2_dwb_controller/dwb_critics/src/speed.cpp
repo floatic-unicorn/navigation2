@@ -50,13 +50,13 @@ void SpeedCritic::onInit()
   if (!node) {
     throw std::runtime_error{"Failed to lock node"};
   }
-
+  declare_parameter_if_not_declared(node, dwb_plugin_name_ + "." + name_ + ".lookAheadDistance", rclcpp::ParameterValue(1.0));
   declare_parameter_if_not_declared(node, dwb_plugin_name_ + "." + name_ + ".straight_path_max_speed_scale", rclcpp::ParameterValue(1.0));
   declare_parameter_if_not_declared(node, dwb_plugin_name_ + "." + name_ + ".curve_path_min_speed_scale", rclcpp::ParameterValue(0.5));
   declare_parameter_if_not_declared(node, dwb_plugin_name_ + "." + name_ + ".straight_path_max_speed", rclcpp::ParameterValue(10.0));
   declare_parameter_if_not_declared(node, dwb_plugin_name_ + "." + name_ + ".curve_path_min_speed", rclcpp::ParameterValue(10.0));
   declare_parameter_if_not_declared(node, dwb_plugin_name_ + "." + name_ + ".distance_for_decel_around_goal", rclcpp::ParameterValue(1.0));
-
+  node->get_parameter(dwb_plugin_name_ + "." + name_ + ".lookAheadDistance", lookAheadDistance_);
   node->get_parameter(dwb_plugin_name_ + "." + name_ + ".straight_path_max_speed_scale", straight_path_max_speed_scale_);
   node->get_parameter(dwb_plugin_name_ + "." + name_ + ".curve_path_min_speed_scale", curve_path_min_speed_scale_);
   node->get_parameter(dwb_plugin_name_ + "." + name_ + ".straight_path_max_speed", straight_path_max_speed_);
@@ -89,7 +89,7 @@ bool SpeedCritic::prepare(
   for(auto point : transformed_plan.poses)
   {
     double distance = hypot(point.x,point.y);
-    if(distance > 0.4)
+    if(distance > lookAheadDistance_)
     {
       curvature = fabs(point.y/pow(distance,2));
       break;

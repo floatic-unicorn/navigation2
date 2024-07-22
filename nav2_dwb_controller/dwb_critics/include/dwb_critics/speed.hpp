@@ -62,7 +62,7 @@ public:
   double scoreTrajectory(const dwb_msgs::msg::Trajectory2D & traj) override;
 
 private:
-
+  double lookAheadDistance_;
   double straight_path_max_speed_scale_, straight_path_max_speed_;
   double curve_path_min_speed_scale_, curve_path_min_speed_;
   double distance_for_decel_around_goal_;

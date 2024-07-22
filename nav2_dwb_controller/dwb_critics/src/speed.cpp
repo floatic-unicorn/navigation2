@@ -86,17 +86,27 @@ bool SpeedCritic::prepare(
   //curvature = fabs(transformed_plan.poses.back().y) / pow(LookaheadDistance,2);
   curvature = 0.0;
   //double LookaheadDistance = hypot(transformed_plan.poses.back().x, transformed_plan.poses.back().y);
-  for(auto point : transformed_plan.poses)
+  double distance = 0.0;
+  for(int k = 1; k<transformed_plan.poses.size(); k++)
   {
-    double distance = hypot(point.x,point.y);
-    curvature = fabs(point.y/pow(distance,2));
+    double error_x = transformed_plan.poses[k].x - transformed_plan.poses[k-1].x;
+    double error_y = transformed_plan.poses[k].y - transformed_plan.poses[k-1].y;
+    distance +=hypot(error_x,error_y);
+    curvature = fabs(transformed_plan.poses[k].y)/pow(distance,2);
     if(distance > lookAheadDistance_)
-    {
-      //curvature = fabs(point.y/pow(distance,2));
       break;
-    }
-
   }
+  // for(auto point : transformed_plan.poses)
+  // {
+  //   double distance = hypot(point.x,point.y);
+  //   curvature = fabs(point.y/pow(distance,2));
+  //   if(distance > lookAheadDistance_)
+  //   {
+  //     //curvature = fabs(point.y/pow(distance,2));
+  //     break;
+  //   }
+
+  // }
   //RCLCPP_INFO(rclcpp::get_logger("dasd"),"L %f curvature %f",LookaheadDistance,curvature);
   // transformed_plan.header.frame_id = costmap_ros_->getGlobalFrameID();
   // transformed_plan.header.stamp = global_plan.header.stamp;

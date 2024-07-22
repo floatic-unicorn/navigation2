@@ -87,7 +87,7 @@ bool SpeedCritic::prepare(
   curvature = 0.0;
   //double LookaheadDistance = hypot(transformed_plan.poses.back().x, transformed_plan.poses.back().y);
   double distance = 0.0;
-  for(int k = 1; k<transformed_plan.poses.size(); k++)
+  for(unsigned int k = 1; k<transformed_plan.poses.size(); k++)
   {
     double error_x = transformed_plan.poses[k].x - transformed_plan.poses[k-1].x;
     double error_y = transformed_plan.poses[k].y - transformed_plan.poses[k-1].y;

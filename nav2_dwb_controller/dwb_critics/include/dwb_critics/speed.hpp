@@ -68,7 +68,7 @@ private:
   double distance_for_decel_around_goal_;
   geometry_msgs::msg::Pose2D goal_pose;
   double error_accumulation;
-  double curvature;
+  double curvature_1, curvature_2;
 };
 
 }  // namespace dwb_critics

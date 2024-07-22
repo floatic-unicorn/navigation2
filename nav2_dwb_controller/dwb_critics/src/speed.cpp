@@ -82,9 +82,9 @@ bool SpeedCritic::prepare(
     
   }
   transformed_plan.poses.pop_back();
-  //double LookaheadDistance = hypot(transformed_plan.poses.back().x, transformed_plan.poses.back().y);
-  //curvature = fabs(transformed_plan.poses.back().y) / pow(LookaheadDistance,2);
-  curvature = 0.0;
+  double lookaheadDistance_1 = hypot(transformed_plan.poses.back().x, transformed_plan.poses.back().y);
+  curvature_1 = fabs(transformed_plan.poses.back().y) / pow(lookaheadDistance_1,2);
+  curvature_2 = 0.0;
   //double LookaheadDistance = hypot(transformed_plan.poses.back().x, transformed_plan.poses.back().y);
   double distance = 0.0;
   for(unsigned int k = 1; k<transformed_plan.poses.size(); k++)
@@ -92,7 +92,7 @@ bool SpeedCritic::prepare(
     double error_x = transformed_plan.poses[k].x - transformed_plan.poses[k-1].x;
     double error_y = transformed_plan.poses[k].y - transformed_plan.poses[k-1].y;
     distance +=hypot(error_x,error_y);
-    curvature = fabs(transformed_plan.poses[k].y)/pow(distance,2);
+    curvature_2 = fabs(transformed_plan.poses[k].y)/pow(distance,2);
     if(distance > lookAheadDistance_)
       break;
   }
@@ -156,7 +156,9 @@ double SpeedCritic::scoreTrajectory(const dwb_msgs::msg::Trajectory2D & traj)
   if(distanceToGoal > distance_for_decel_around_goal_)
   {
     
-    cost = straight_path_max_speed_scale_ * (straight_path_max_speed_ - traj.velocity.x) + curve_path_min_speed_scale_*curvature*fabs(curve_path_min_speed_-traj.velocity.x);
+    cost = straight_path_max_speed_scale_ * (straight_path_max_speed_ - traj.velocity.x) 
+    + curve_path_min_speed_scale_*curvature_1*fabs(curve_path_min_speed_-traj.velocity.x) 
+    + curve_path_min_speed_scale_*curvature_2*fabs(curve_path_min_speed_-traj.velocity.x);
     
   }
   else

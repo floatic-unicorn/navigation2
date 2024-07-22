@@ -85,13 +85,12 @@ bool SpeedCritic::prepare(
   double lookaheadDistance_1 = hypot(transformed_plan.poses.back().x, transformed_plan.poses.back().y);
   curvature_1 = fabs(transformed_plan.poses.back().y) / pow(lookaheadDistance_1,2);
   curvature_2 = 0.0;
-  //double LookaheadDistance = hypot(transformed_plan.poses.back().x, transformed_plan.poses.back().y);
   double distance = 0.0;
   for(unsigned int k = 1; k<transformed_plan.poses.size(); k++)
   {
     double error_x = transformed_plan.poses[k].x - transformed_plan.poses[k-1].x;
     double error_y = transformed_plan.poses[k].y - transformed_plan.poses[k-1].y;
-    distance +=hypot(error_x,error_y);
+    distance += hypot(error_x,error_y);
     curvature_2 = fabs(transformed_plan.poses[k].y)/pow(distance,2);
     if(distance > lookAheadDistance_)
       break;
@@ -148,11 +147,6 @@ double SpeedCritic::scoreTrajectory(const dwb_msgs::msg::Trajectory2D & traj)
 {
   double distanceToGoal = hypot(goal_pose.x - traj.poses.front().x,goal_pose.y - traj.poses.front().y);
   double cost= 0.0;
-  // if(traj.velocity.x<0.1)
-  // {
-  //   cost += straight_path_max_speed_scale_/(1+fabs(traj.velocity.theta+traj.velocity.x));
-  // }
-  //RCLCPP_INFO(rclcpp::get_logger("dasd"),"accumError %f",error_accumulation);
   if(distanceToGoal > distance_for_decel_around_goal_)
   {
     

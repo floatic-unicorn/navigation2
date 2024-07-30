@@ -35,6 +35,7 @@ add_library(${PROJECT_NAME} SHARED
     src/rotate_to_goal.cpp
     src/twirling.cpp
     src/speed.cpp
+    src/proximity_obstacle.cpp
 )
 
 set(dependencies

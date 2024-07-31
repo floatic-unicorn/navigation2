@@ -14,13 +14,21 @@ void ProximityObstacleCritic::onInit()
   if (!node) {
     throw std::runtime_error{"Failed to lock node"};
   }
-  declare_parameter_if_not_declared(node, dwb_plugin_name_ + "." + name_ + ".stop_side_distance", rclcpp::ParameterValue(0.15));
-  declare_parameter_if_not_declared(node, dwb_plugin_name_ + "." + name_ + ".stop_front_distance", rclcpp::ParameterValue(0.4));
   declare_parameter_if_not_declared(node, dwb_plugin_name_ + "." + name_ + ".front_width_robot", rclcpp::ParameterValue(0.4));
+  
+  declare_parameter_if_not_declared(node, dwb_plugin_name_ + "." + name_ + ".stop_side_distance", rclcpp::ParameterValue(0.15));
+  declare_parameter_if_not_declared(node, dwb_plugin_name_ + "." + name_ + ".stop_front_max_distance", rclcpp::ParameterValue(0.4));
+  declare_parameter_if_not_declared(node, dwb_plugin_name_ + "." + name_ + ".stop_front_min_distance", rclcpp::ParameterValue(0.09));
+  declare_parameter_if_not_declared(node, dwb_plugin_name_ + "." + name_ + ".filter_size_obstacle_point", rclcpp::ParameterValue(5));
+
   declare_parameter_if_not_declared(node, dwb_plugin_name_ + "." + name_ + ".verbose", rclcpp::ParameterValue(false));
+  
+  
   node->get_parameter(dwb_plugin_name_ + "." + name_ + ".stop_side_distance", stop_side_distance_);
-  node->get_parameter(dwb_plugin_name_ + "." + name_ + ".stop_front_distance", stop_front_distance_);
+  node->get_parameter(dwb_plugin_name_ + "." + name_ + ".stop_front_max_distance", stop_front_max_distance_);
+  node->get_parameter(dwb_plugin_name_ + "." + name_ + ".stop_front_min_distance", stop_front_min_distance_);
   node->get_parameter(dwb_plugin_name_ + "." + name_ + ".front_width_robot", front_width_robot_);
+  node->get_parameter(dwb_plugin_name_ + "." + name_ + ".filter_size_obstacle_point", filter_size_obstacle_point_);
   node->get_parameter(dwb_plugin_name_ + "." + name_ + ".verbose", verbose_);
   scan_sub_ = node->create_subscription<sensor_msgs::msg::LaserScan>("/scan", rclcpp::SensorDataQoS(), std::bind(&ProximityObstacleCritic::scan_callback, this, std::placeholders::_1));
 }
@@ -39,11 +47,10 @@ void ProximityObstacleCritic::scan_callback(const sensor_msgs::msg::LaserScan::S
     {
         double x = range * cosf(radian);
         double y = range * sinf(radian);
-        double stop_front_minimum_distance= 0.01;
         //double robot_width = 0.53;// 0.2/2 distance along side-axis
         if(abs(y) < front_width_robot_/2.0)
         {
-            if(stop_front_distance_ > x && x > stop_front_minimum_distance)
+            if(stop_front_max_distance_ > x && x > stop_front_min_distance_)
             {
                 obstacle_point_size_++;
                 proximity_ = true;
@@ -53,7 +60,7 @@ void ProximityObstacleCritic::scan_callback(const sensor_msgs::msg::LaserScan::S
         }
         else if(front_width_robot_/2.0 < abs(y) && abs(y) < (front_width_robot_/2.0) + stop_side_distance_)
         {
-            if(stop_front_distance_> x)
+            if(stop_front_max_distance_> x)
             {
                 obstacle_point_size_++;
                 proximity_ = true;
@@ -86,7 +93,7 @@ double ProximityObstacleCritic::scoreTrajectory(const dwb_msgs::msg::Trajectory2
 {
   double cost= 0.0;
   //RCLCPP_INFO(rclcpp::get_logger("Proximity"),"Proximity : %d",proximity_);
-  if (proximity_)
+  if (proximity_ && obstacle_point_size_ > filter_size_obstacle_point_)
   {
     if(traj.velocity.x > 0 || abs(traj.velocity.theta) >0.1)
     {

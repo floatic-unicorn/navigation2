@@ -20,7 +20,7 @@ class ProximityObstacleCritic : public dwb_core::TrajectoryCritic
 {
 public:
   ProximityObstacleCritic()
-  : stop_side_distance_(0.3), stop_front_distance_(0.5), front_width_robot_(0.53){}
+  : stop_side_distance_(0.3), stop_front_max_distance_(0.5), stop_front_min_distance_(0.5), front_width_robot_(0.53),filter_size_obstacle_point_(5){}
   void onInit() override;
   bool prepare(
     const geometry_msgs::msg::Pose2D & pose, const nav_2d_msgs::msg::Twist2D & vel,
@@ -33,9 +33,11 @@ private:
   bool proximity_;
   bool verbose_;
   double stop_side_distance_;
-  double stop_front_distance_;
+  double stop_front_max_distance_;
+  double stop_front_min_distance_;
   double front_width_robot_;
   int obstacle_point_size_;
+  int filter_size_obstacle_point_;
 };
 
 }  // namespace dwb_critics

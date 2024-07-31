@@ -31,9 +31,11 @@ public:
 
 private:
   bool proximity_;
+  bool verbose_;
   double stop_side_distance_;
   double stop_front_distance_;
   double front_width_robot_;
+  int obstacle_point_size_;
 };
 
 }  // namespace dwb_critics

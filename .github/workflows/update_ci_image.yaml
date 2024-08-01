@@ -38,6 +38,9 @@ jobs:
       no_cache: ${{ steps.check.outputs.no_cache }}
     container:
       image: ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+      credentials:
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: "Check apt updates"
         id: check

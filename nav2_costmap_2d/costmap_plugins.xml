@@ -3,6 +3,9 @@
     <class type="nav2_costmap_2d::InflationLayer"  base_class_type="nav2_costmap_2d::Layer">
       <description>Inflates obstacles to speed collision checking and to make robot prefer to stay away from obstacles.</description>
     </class>
+    <class type="nav2_costmap_2d::LocalInflationLayer"  base_class_type="nav2_costmap_2d::Layer">
+      <description>Inflates obstacles to speed collision checking and to make robot prefer to stay away from obstacles. but, it don't consider inscribe_radius.</description>
+    </class>
     <class type="nav2_costmap_2d::InverseInflationLayer"  base_class_type="nav2_costmap_2d::Layer">
       <description>Inverse Inflates obstacles to robust planning.</description>
     </class>

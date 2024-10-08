@@ -255,6 +255,7 @@ InflationLayer::updateCosts(
         continue;
       }
 
+
       seen_[index] = true;
 
       unsigned int mx = dist_bin[i].x_;

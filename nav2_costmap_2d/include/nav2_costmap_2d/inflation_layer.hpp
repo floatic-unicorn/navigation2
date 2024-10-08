@@ -150,13 +150,14 @@ public:
     unsigned char cost = 0;
     if (distance == 0) {
       cost = INSCRIBED_INFLATED_OBSTACLE;
-    } else if (distance * resolution_ <= inscribed_radius_) {
-      cost = INSCRIBED_INFLATED_OBSTACLE;
-    } else {
+    } //else if (distance * resolution_ <= inscribed_radius_) {
+      //cost = INSCRIBED_INFLATED_OBSTACLE;
+    //} 
+    else {
       // make sure cost falls off by Euclidean distance
-      double factor =
-        exp(-1.0 * cost_scaling_factor_ * (distance * resolution_ - inscribed_radius_));
-      cost = static_cast<unsigned char>((INSCRIBED_INFLATED_OBSTACLE - 1) * factor);
+      double factor = exp(-1.0 * cost_scaling_factor_ * (distance * resolution_));
+      unsigned char exp_cost = static_cast<unsigned char>((INSCRIBED_INFLATED_OBSTACLE - 1) * factor);
+      cost = static_cast<unsigned char>(std::max((unsigned char)61,exp_cost));
     }
     return cost;
   }

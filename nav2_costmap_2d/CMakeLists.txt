@@ -81,6 +81,7 @@ ament_target_dependencies(nav2_costmap_2d_core
 )
 
 add_library(layers SHARED
+  plugins/local_inflation_layer.cpp
   plugins/inflation_layer.cpp
   plugins/inverse_inflation_layer.cpp
   plugins/static_layer.cpp

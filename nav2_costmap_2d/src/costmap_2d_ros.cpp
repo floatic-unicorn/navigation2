@@ -189,6 +189,8 @@ Costmap2DROS::on_configure(const rclcpp_lifecycle::State & /*state*/)
   }
 
   // Create the publishers and subscribers
+  gsj_pose_sub_ = create_subscription<geometry_msgs::msg::PoseStamped>(
+    "gsj/pose", rclcpp::SensorDataQoS(),std::bind(&Costmap2DROS::poseCallback, this, std::placeholders::_1));
   footprint_sub_ = create_subscription<geometry_msgs::msg::Polygon>(
     "footprint",
     rclcpp::SystemDefaultsQoS(),
@@ -392,7 +394,11 @@ Costmap2DROS::setRobotFootprint(const std::vector<geometry_msgs::msg::Point> & p
   padFootprint(padded_footprint_, footprint_padding_);
   layered_costmap_->setFootprint(padded_footprint_);
 }
-
+void
+Costmap2DROS::poseCallback(const geometry_msgs::msg::PoseStamped & msg)
+{
+  gsj_pose_ = msg;
+}
 void
 Costmap2DROS::setRobotFootprintPolygon(
   const geometry_msgs::msg::Polygon::SharedPtr footprint)
@@ -597,9 +603,15 @@ Costmap2DROS::resetLayers()
 bool
 Costmap2DROS::getRobotPose(geometry_msgs::msg::PoseStamped & global_pose)
 {
-  return nav2_util::getCurrentPose(
-    global_pose, *tf_buffer_,
-    global_frame_, robot_base_frame_, transform_tolerance_);
+  
+  double diff_time = fabs(rclcpp::Time(gsj_pose_.header.stamp).seconds()  - this->get_clock()->now().seconds());
+  if(diff_time > transform_tolerance_)
+    return false;
+  global_pose = gsj_pose_;
+  return true;
+  // return nav2_util::getCurrentPose(
+  //   global_pose, *tf_buffer_,
+  //   global_frame_, robot_base_frame_, transform_tolerance_);
 }
 
 bool

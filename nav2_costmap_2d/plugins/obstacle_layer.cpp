@@ -225,31 +225,36 @@ void ObstacleLayer::onInitialize()
     if (data_type == "LaserScan") {
       auto sub = std::make_shared<message_filters::Subscriber<sensor_msgs::msg::LaserScan,
           rclcpp_lifecycle::LifecycleNode>>(node, topic, custom_qos_profile, sub_opt);
-      sub->unsubscribe();
-
-      auto filter = std::make_shared<tf2_ros::MessageFilter<sensor_msgs::msg::LaserScan>>(
-        *sub, *tf_, global_frame_, 50,
-        node->get_node_logging_interface(),
-        node->get_node_clock_interface(),
-        tf2::durationFromSec(transform_tolerance));
-
       if (inf_is_valid) {
-        filter->registerCallback(
-          std::bind(
-            &ObstacleLayer::laserScanValidInfCallback, this, std::placeholders::_1,
-            observation_buffers_.back()));
-
+        sub->registerCallback(std::bind(&ObstacleLayer::laserScanValidInfCallback, this, std::placeholders::_1, observation_buffers_.back()));
       } else {
-        filter->registerCallback(
-          std::bind(
-            &ObstacleLayer::laserScanCallback, this, std::placeholders::_1,
-            observation_buffers_.back()));
+        sub->registerCallback(std::bind(&ObstacleLayer::laserScanCallback, this, std::placeholders::_1, observation_buffers_.back()));
       }
+      // sub->unsubscribe();
+      
+      // auto filter = std::make_shared<tf2_ros::MessageFilter<sensor_msgs::msg::LaserScan>>(
+      //   *sub, *tf_, global_frame_, 50,
+      //   node->get_node_logging_interface(),
+      //   node->get_node_clock_interface(),
+      //   tf2::durationFromSec(transform_tolerance));
 
-      observation_subscribers_.push_back(sub);
+      // if (inf_is_valid) {
+      //   filter->registerCallback(
+      //     std::bind(
+      //       &ObstacleLayer::laserScanValidInfCallback, this, std::placeholders::_1,
+      //       observation_buffers_.back()));
 
-      observation_notifiers_.push_back(filter);
-      observation_notifiers_.back()->setTolerance(rclcpp::Duration::from_seconds(0.05));
+      // } else {
+      //   filter->registerCallback(
+      //     std::bind(
+      //       &ObstacleLayer::laserScanCallback, this, std::placeholders::_1,
+      //       observation_buffers_.back()));
+      // }
+
+      // observation_subscribers_.push_back(sub);
+
+      // observation_notifiers_.push_back(filter);
+      // observation_notifiers_.back()->setTolerance(rclcpp::Duration::from_seconds(0.05));
 
     } else {
       auto sub = std::make_shared<message_filters::Subscriber<sensor_msgs::msg::PointCloud2,
@@ -328,25 +333,33 @@ ObstacleLayer::laserScanCallback(
   // project the laser into a point cloud
   sensor_msgs::msg::PointCloud2 cloud;
   cloud.header = message->header;
-
+  projector_.projectLaser(*message, cloud);
+  
+  //   RCLCPP_WARN(
+  //     logger_,
+  //     "transformLaserScanToPointCloud error, it seems the message from laser is malformed."
+  //     " Ignore this message. what(): %s",
+  //     ex.what());
+  //   return;
+  // }
   // project the scan into a point cloud
-  try {
-    projector_.transformLaserScanToPointCloud(message->header.frame_id, *message, cloud, *tf_);
-  } catch (tf2::TransformException & ex) {
-    RCLCPP_WARN(
-      logger_,
-      "High fidelity enabled, but TF returned a transform exception to frame %s: %s",
-      global_frame_.c_str(),
-      ex.what());
-    projector_.projectLaser(*message, cloud);
-  } catch (std::runtime_error & ex) {
-    RCLCPP_WARN(
-      logger_,
-      "transformLaserScanToPointCloud error, it seems the message from laser is malformed."
-      " Ignore this message. what(): %s",
-      ex.what());
-    return;
-  }
+  // try {
+  //   projector_.transformLaserScanToPointCloud(message->header.frame_id, *message, cloud, *tf_);
+  // } catch (tf2::TransformException & ex) {
+  //   RCLCPP_WARN(
+  //     logger_,
+  //     "High fidelity enabled, but TF returned a transform exception to frame %s: %s",
+  //     global_frame_.c_str(),
+  //     ex.what());
+  //   projector_.projectLaser(*message, cloud);
+  // } catch (std::runtime_error & ex) {
+  //   RCLCPP_WARN(
+  //     logger_,
+  //     "transformLaserScanToPointCloud error, it seems the message from laser is malformed."
+  //     " Ignore this message. what(): %s",
+  //     ex.what());
+  //   return;
+  // }
 
   // buffer the point cloud
   buffer->lock();
@@ -374,23 +387,25 @@ ObstacleLayer::laserScanValidInfCallback(
   cloud.header = message.header;
 
   // project the scan into a point cloud
-  try {
-    projector_.transformLaserScanToPointCloud(message.header.frame_id, message, cloud, *tf_);
-  } catch (tf2::TransformException & ex) {
-    RCLCPP_WARN(
-      logger_,
-      "High fidelity enabled, but TF returned a transform exception to frame %s: %s",
-      global_frame_.c_str(), ex.what());
-    projector_.projectLaser(message, cloud);
-  } catch (std::runtime_error & ex) {
-    RCLCPP_WARN(
-      logger_,
-      "transformLaserScanToPointCloud error, it seems the message from laser is malformed."
-      " Ignore this message. what(): %s",
-      ex.what());
-    return;
-  }
-
+  // try {
+  //   projector_.transformLaserScanToPointCloud(message.header.frame_id, message, cloud, *tf_);
+  // } catch (tf2::TransformException & ex) {
+  //   RCLCPP_WARN(
+  //     logger_,
+  //     "High fidelity enabled, but TF returned a transform exception to frame %s: %s",
+  //     global_frame_.c_str(), ex.what());
+  //   projector_.projectLaser(message, cloud);
+  // } catch (std::runtime_error & ex) {
+  //   RCLCPP_WARN(
+  //     logger_,
+  //     "transformLaserScanToPointCloud error, it seems the message from laser is malformed."
+  //     " Ignore this message. what(): %s",
+  //     ex.what());
+  //   return;
+  // }
+  
+  projector_.projectLaser(message, cloud);
+  
   // buffer the point cloud
   buffer->lock();
   buffer->bufferCloud(cloud);

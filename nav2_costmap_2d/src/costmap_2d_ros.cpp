@@ -189,6 +189,7 @@ Costmap2DROS::on_configure(const rclcpp_lifecycle::State & /*state*/)
   }
 
   // Create the publishers and subscribers
+  gsj_pose_sub_ = create_subscription<geometry_msgs::msg::PoseStamped>("/gsj/pose",rclcpp::SensorDataQoS(), std::bind(&Costmap2DROS::gsjposeCallback, this,std::placeholders::_1));
   footprint_sub_ = create_subscription<geometry_msgs::msg::Polygon>(
     "footprint",
     rclcpp::SystemDefaultsQoS(),
@@ -392,7 +393,13 @@ Costmap2DROS::setRobotFootprint(const std::vector<geometry_msgs::msg::Point> & p
   padFootprint(padded_footprint_, footprint_padding_);
   layered_costmap_->setFootprint(padded_footprint_);
 }
-
+void
+Costmap2DROS::gsjposeCallback(
+  const geometry_msgs::msg::PoseStamped::SharedPtr pose)
+{
+  gsj_pose_.header = pose->header;
+  gsj_pose_.pose = pose ->pose;
+}
 void
 Costmap2DROS::setRobotFootprintPolygon(
   const geometry_msgs::msg::Polygon::SharedPtr footprint)

@@ -283,6 +283,8 @@ public:
    * layered_costmap_->setFootprint().  Also saves the unpadded
    * footprint, which is available from
    * getUnpaddedRobotFootprint(). */
+  void gsjposeCallback(const geometry_msgs::msg::PoseStamped::SharedPtr pose);
+
   void setRobotFootprintPolygon(const geometry_msgs::msg::Polygon::SharedPtr footprint);
 
   std::shared_ptr<tf2_ros::Buffer> getTfBuffer() {return tf_buffer_;}
@@ -308,7 +310,8 @@ protected:
   rclcpp_lifecycle::LifecyclePublisher<geometry_msgs::msg::PolygonStamped>::SharedPtr
     footprint_pub_;
   std::unique_ptr<Costmap2DPublisher> costmap_publisher_{nullptr};
-
+  rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr gsj_pose_sub_;
+  geometry_msgs::msg::PoseStamped gsj_pose_;
   rclcpp::Subscription<geometry_msgs::msg::Polygon>::SharedPtr footprint_sub_;
   rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr parameter_sub_;
 

@@ -83,6 +83,7 @@ ObservationBuffer::~ObservationBuffer()
 
 void ObservationBuffer::bufferCloud(const sensor_msgs::msg::PointCloud2 & cloud)
 {
+  std::lock_guard<std::recursive_mutex> lock(lock_);
   geometry_msgs::msg::PointStamped global_origin;
 
   // create a new observation on the list to be populated

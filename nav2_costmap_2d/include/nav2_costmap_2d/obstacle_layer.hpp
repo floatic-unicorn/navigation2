@@ -235,6 +235,7 @@ protected:
   std::string global_frame_;  ///< @brief The global frame for the costmap
   double min_obstacle_height_;  ///< @brief Max Obstacle Height
   double max_obstacle_height_;  ///< @brief Max Obstacle Height
+  std::recursive_mutex mtx_;
   geometry_msgs::msg::PoseStamped::SharedPtr scan_pose_;
   rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr scan_pose_sub_;
   /// @brief Used to project laser scans into point clouds

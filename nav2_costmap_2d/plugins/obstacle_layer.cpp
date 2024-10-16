@@ -163,7 +163,7 @@ void ObstacleLayer::onInitialize()
     node->get_parameter(name_ + "." + source + "." + "inf_is_valid", inf_is_valid);
     node->get_parameter(name_ + "." + source + "." + "marking", marking);
     node->get_parameter(name_ + "." + source + "." + "clearing", clearing);
-    geometry_msgs::msg::PoseStamped scan_pose;
+    
     auto scan_pose_sub_ = node->create_subscription<geometry_msgs::msg::PoseStamped>(
     "/gsj/scan_pose", rclcpp::SensorDataQoS(),std::bind(&ObstacleLayer::poseCallback, this, std::placeholders::_1));
     
@@ -197,7 +197,7 @@ void ObstacleLayer::onInitialize()
       std::shared_ptr<ObservationBuffer
       >(
         new ObservationBuffer(
-          node, topic, scan_pose, observation_keep_time, expected_update_rate,
+          node, topic, scan_pose_, observation_keep_time, expected_update_rate,
           min_obstacle_height,
           max_obstacle_height, obstacle_max_range, obstacle_min_range, raytrace_max_range,
           raytrace_min_range,

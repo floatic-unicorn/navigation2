@@ -108,7 +108,7 @@ void ObservationBuffer::bufferCloud(const sensor_msgs::msg::PointCloud2 & cloud)
     global_origin.point.x = scan_pose_.pose.position.x;
     global_origin.point.y = scan_pose_.pose.position.y;
     global_origin.point.z = scan_pose_.pose.position.z;
-    
+    observation_list_.front().origin_ = global_origin.point;
     // make sure to pass on the raytrace/obstacle range
     // of the observation buffer to the observations
     observation_list_.front().raytrace_max_range_ = raytrace_max_range_;

@@ -190,6 +190,7 @@ void ObstacleLayer::onInitialize()
       sensor_frame.c_str());
     scan_pose_sub_ = node->create_subscription<geometry_msgs::msg::PoseStamped>(
       "/gsj/scan_pose", rclcpp::SensorDataQoS(),std::bind(&ObstacleLayer::scanPoseCallback, this, std::placeholders::_1));
+      scan_pose_ = std::make_shared<geometry_msgs::msg::PoseStamped>();
     // create an observation buffer
     observation_buffers_.push_back(
       std::shared_ptr<ObservationBuffer
@@ -332,12 +333,9 @@ ObstacleLayer::scanPoseCallback(
     const geometry_msgs::msg::PoseStamped & msg)
 {
   std::lock_guard<std::mutex> lock(shared_mutex);
-  if (!scan_pose_) {
-        scan_pose_ = std::make_shared<geometry_msgs::msg::PoseStamped>(msg);  // 처음에는 포인터 생성
-    } else {
-        *scan_pose_ = msg;
+  *scan_pose_ = msg;
   RCLCPP_INFO(logger_,"scan(%.2f, %.2f)",scan_pose_->pose.position.x,scan_pose_->pose.position.y);
-  }
+  
 }
 void
 ObstacleLayer::laserScanCallback(

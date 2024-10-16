@@ -604,14 +604,11 @@ Costmap2DROS::resetLayers()
 bool
 Costmap2DROS::getRobotPose(geometry_msgs::msg::PoseStamped & global_pose)
 {
-  
-  if(!first_gsj_pose_)
+  double diff_time = fabs(rclcpp::Time(this->get_clock()->now()).seconds() - rclcpp::Time(gsj_pose_.header.stamp).seconds())
+  if(!first_gsj_pose_ || diff_time > transform_tolerance_)
     return false;
-
-  double now = rclcpp::Time(this->get_clock()->now()).seconds();
-  RCLCPP_INFO(this->get_logger(),"now time %.2f, gsj_pose time %.2f", now, rclcpp::Time(gsj_pose_.header.stamp).seconds());
+  //RCLCPP_INFO(this->get_logger(),"now time %.2f, gsj_pose time %.2f", now, rclcpp::Time(gsj_pose_.header.stamp).seconds());
   global_pose = gsj_pose_;
-  
   return true;
   // return nav2_util::getCurrentPose(
   //   global_pose, *tf_buffer_,

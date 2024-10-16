@@ -164,7 +164,7 @@ public:
 
   
   void poseCallback(
-    geometry_msgs::msg::PoseStamped::ConstSharedPtr message);
+    const geometry_msgs::msg::PoseStamped & msg);
   
   /**
    * @brief  A callback to handle buffering PointCloud2 messages

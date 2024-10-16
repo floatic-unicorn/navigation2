@@ -78,7 +78,7 @@ public:
   ObservationBuffer(
     const nav2_util::LifecycleNode::WeakPtr & parent,
     std::string topic_name,
-    geometry_msgs::msg::PoseStamped scan_pose,
+    const geometry_msgs::msg::PoseStamped & scan_pose,
     double observation_keep_time,
     double expected_update_rate,
     double min_obstacle_height, double max_obstacle_height, double obstacle_max_range,

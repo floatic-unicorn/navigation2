@@ -331,10 +331,10 @@ ObstacleLayer::dynamicParametersCallback(
 }
 void
 ObstacleLayer::poseCallback(
-    geometry_msgs::msg::PoseStamped::ConstSharedPtr message)
+    const geometry_msgs::msg::PoseStamped & message)
 {
-  scan_pose_.header = message->header;
-  scan_pose_.pose = message->pose;
+  scan_pose_.header = message.header;
+  scan_pose_.pose = message.pose;
 }
 void
 ObstacleLayer::laserScanCallback(
@@ -345,7 +345,6 @@ ObstacleLayer::laserScanCallback(
   sensor_msgs::msg::PointCloud2 cloud;
   cloud.header = message->header;
   projector_.projectLaser(*message, cloud);
-  
   //   RCLCPP_WARN(
   //     logger_,
   //     "transformLaserScanToPointCloud error, it seems the message from laser is malformed."

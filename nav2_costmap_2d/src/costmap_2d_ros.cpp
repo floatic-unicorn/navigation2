@@ -190,7 +190,7 @@ Costmap2DROS::on_configure(const rclcpp_lifecycle::State & /*state*/)
 
   // Create the publishers and subscribers
   gsj_pose_sub_ = create_subscription<geometry_msgs::msg::PoseStamped>(
-    "gsj/pose", rclcpp::SensorDataQoS(),std::bind(&Costmap2DROS::poseCallback, this, std::placeholders::_1));
+    "/gsj/pose", rclcpp::SensorDataQoS(),std::bind(&Costmap2DROS::poseCallback, this, std::placeholders::_1));
   footprint_sub_ = create_subscription<geometry_msgs::msg::Polygon>(
     "footprint",
     rclcpp::SystemDefaultsQoS(),

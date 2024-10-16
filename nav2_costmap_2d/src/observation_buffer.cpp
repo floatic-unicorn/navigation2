@@ -45,6 +45,7 @@
 #include "tf2/convert.h"
 #include "sensor_msgs/point_cloud2_iterator.hpp"
 using namespace std::chrono_literals;
+std::mutex shared_mutex;
 
 namespace nav2_costmap_2d
 {
@@ -75,6 +76,7 @@ ObservationBuffer::ObservationBuffer(
   clock_ = node->get_clock();
   logger_ = node->get_logger();
   last_updated_ = node->now();
+  
 }
 
 ObservationBuffer::~ObservationBuffer()

@@ -190,12 +190,13 @@ void ObstacleLayer::onInitialize()
       sensor_frame.c_str());
     scan_pose_sub_ = node->create_subscription<geometry_msgs::msg::PoseStamped>(
       "/gsj/scan_pose", rclcpp::SensorDataQoS(),std::bind(&ObstacleLayer::scanPoseCallback, this, std::placeholders::_1));
+      auto scan_pose_ptr = std::make_shared<geometry_msgs::msg::PoseStamped>(scan_pose_);
     // create an observation buffer
     observation_buffers_.push_back(
       std::shared_ptr<ObservationBuffer
       >(
         new ObservationBuffer(
-          node, topic, scan_pose_, observation_keep_time, expected_update_rate,
+          node, topic, scan_pose_ptr, observation_keep_time, expected_update_rate,
           min_obstacle_height,
           max_obstacle_height, obstacle_max_range, obstacle_min_range, raytrace_max_range,
           raytrace_min_range,
@@ -331,7 +332,7 @@ void
 ObstacleLayer::scanPoseCallback(
     const geometry_msgs::msg::PoseStamped & msg)
 {
-  //std::lock_guard<std::mutex> lock(shared_mutex);
+  std::lock_guard<std::mutex> lock(shared_mutex);
   //scan_pose_ = std::make_shared<geometry_msgs::msg::PoseStamped>(msg);
   scan_pose_ = msg;
   RCLCPP_INFO(logger_,"scan(%.2f, %.2f)",scan_pose_.pose.position.x,scan_pose_.pose.position.y);

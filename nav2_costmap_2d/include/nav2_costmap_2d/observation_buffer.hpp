@@ -79,7 +79,7 @@ public:
   ObservationBuffer(
     const nav2_util::LifecycleNode::WeakPtr & parent,
     std::string topic_name,
-    geometry_msgs::msg::PoseStamped scan_pose,
+    geometry_msgs::msg::PoseStamped::SharedPtr scan_pose,
     double observation_keep_time,
     double expected_update_rate,
     double min_obstacle_height, double max_obstacle_height, double obstacle_max_range,
@@ -145,7 +145,7 @@ private:
   rclcpp::Logger logger_{rclcpp::get_logger("nav2_costmap_2d")};
   //tf2_ros::Buffer & tf2_buffer_;
   //geometry_msgs::msg::PoseStamped::SharedPtr scan_pose_;
-  geometry_msgs::msg::PoseStamped scan_pose_;
+  geometry_msgs::msg::PoseStamped::SharedPtr scan_pose_;
   const rclcpp::Duration observation_keep_time_;
   const rclcpp::Duration expected_update_rate_;
   rclcpp::Time last_updated_;

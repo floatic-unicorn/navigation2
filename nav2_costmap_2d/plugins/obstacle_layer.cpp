@@ -251,7 +251,7 @@ void ObstacleLayer::onInitialize()
       //       observation_buffers_.back()));
       // }
 
-      // observation_subscribers_.push_back(sub);
+      observation_subscribers_.push_back(sub);
 
       // observation_notifiers_.push_back(filter);
       // observation_notifiers_.back()->setTolerance(rclcpp::Duration::from_seconds(0.05));
@@ -267,27 +267,27 @@ void ObstacleLayer::onInitialize()
           "obstacle_layer: inf_is_valid option is not applicable to PointCloud observations.");
       }
 
-      auto filter = std::make_shared<tf2_ros::MessageFilter<sensor_msgs::msg::PointCloud2>>(
-        *sub, *tf_, global_frame_, 50,
-        node->get_node_logging_interface(),
-        node->get_node_clock_interface(),
-        tf2::durationFromSec(transform_tolerance));
+      // auto filter = std::make_shared<tf2_ros::MessageFilter<sensor_msgs::msg::PointCloud2>>(
+      //   *sub, *tf_, global_frame_, 50,
+      //   node->get_node_logging_interface(),
+      //   node->get_node_clock_interface(),
+      //   tf2::durationFromSec(transform_tolerance));
 
-      filter->registerCallback(
+      sub->registerCallback(
         std::bind(
           &ObstacleLayer::pointCloud2Callback, this, std::placeholders::_1,
           observation_buffers_.back()));
 
       observation_subscribers_.push_back(sub);
-      observation_notifiers_.push_back(filter);
+      //observation_notifiers_.push_back(filter);
     }
 
-    if (sensor_frame != "") {
-      std::vector<std::string> target_frames;
-      target_frames.push_back(global_frame_);
-      target_frames.push_back(sensor_frame);
-      observation_notifiers_.back()->setTargetFrames(target_frames);
-    }
+    // if (sensor_frame != "") {
+    //   std::vector<std::string> target_frames;
+    //   target_frames.push_back(global_frame_);
+    //   target_frames.push_back(sensor_frame);
+    //   observation_notifiers_.back()->setTargetFrames(target_frames);
+    // }
   }
 }
 

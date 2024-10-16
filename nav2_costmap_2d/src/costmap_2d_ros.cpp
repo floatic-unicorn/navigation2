@@ -397,6 +397,7 @@ Costmap2DROS::setRobotFootprint(const std::vector<geometry_msgs::msg::Point> & p
 void
 Costmap2DROS::poseCallback(const geometry_msgs::msg::PoseStamped & msg)
 {
+  first_gsj_pose_ = true;
   gsj_pose_ = msg;
 }
 void
@@ -604,10 +605,13 @@ bool
 Costmap2DROS::getRobotPose(geometry_msgs::msg::PoseStamped & global_pose)
 {
   
-  double diff_time = fabs(rclcpp::Time(gsj_pose_.header.stamp).seconds()  - this->get_clock()->now().seconds());
-  if(diff_time > transform_tolerance_)
+  if(!first_gsj_pose_)
     return false;
+
+  double now = rclcpp::Time(this->get_clock()->now()).seconds();
+  RCLCPP_INFO(this->get_logger(),"now time %.2f, gsj_pose time %.2f", now, rclcpp::Time(gsj_pose_.header.stamp).seconds());
   global_pose = gsj_pose_;
+  
   return true;
   // return nav2_util::getCurrentPose(
   //   global_pose, *tf_buffer_,

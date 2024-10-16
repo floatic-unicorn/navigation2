@@ -309,7 +309,7 @@ protected:
   rclcpp_lifecycle::LifecyclePublisher<geometry_msgs::msg::PolygonStamped>::SharedPtr
     footprint_pub_;
   std::unique_ptr<Costmap2DPublisher> costmap_publisher_{nullptr};
-  rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr gsj_pose_sub_;
+  
   rclcpp::Subscription<geometry_msgs::msg::Polygon>::SharedPtr footprint_sub_;
   rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr parameter_sub_;
 
@@ -372,7 +372,11 @@ protected:
   std::vector<geometry_msgs::msg::Point> padded_footprint_;
 
   std::unique_ptr<ClearCostmapService> clear_costmap_service_;
+
+  rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr gsj_pose_sub_;
   geometry_msgs::msg::PoseStamped gsj_pose_;
+  geometry_msgs::msg::PoseStamped prev_gsj_pose_;
+  bool first_gsj_pose_;
   // Dynamic parameters handler
   OnSetParametersCallbackHandle::SharedPtr dyn_params_handler;
 

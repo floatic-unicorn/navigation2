@@ -51,7 +51,7 @@ namespace nav2_costmap_2d
 ObservationBuffer::ObservationBuffer(
   const nav2_util::LifecycleNode::WeakPtr & parent,
   std::string topic_name,
-  const geometry_msgs::msg::PoseStamped &scan_pose,
+  geometry_msgs::msg::PoseStamped::SharedPtr scan_pose,
   double observation_keep_time,
   double expected_update_rate,
   double min_obstacle_height, double max_obstacle_height, double obstacle_max_range,
@@ -103,12 +103,12 @@ void ObservationBuffer::bufferCloud(const sensor_msgs::msg::PointCloud2 & cloud)
     // local_origin.point.z = 0;
     //tf2_buffer_.transform(local_origin, global_origin, global_frame_, tf_tolerance_);
     //tf2::convert(global_origin.point, observation_list_.front().origin_);
-    global_origin.header.stamp = scan_pose_.header.stamp;
-    global_origin.header.frame_id = scan_pose_.header.frame_id;
-    global_origin.point.x = scan_pose_.pose.position.x;
-    global_origin.point.y = scan_pose_.pose.position.y;
-    global_origin.point.z = scan_pose_.pose.position.z;
-    RCLCPP_INFO(logger_,"Observation Buffer scan(%.2f, %.2f)",scan_pose_.pose.position.x,scan_pose_.pose.position.y);
+    global_origin.header.stamp = scan_pose_->header.stamp;
+    global_origin.header.frame_id = scan_pose_->header.frame_id;
+    global_origin.point.x = scan_pose_->pose.position.x;
+    global_origin.point.y = scan_pose_->pose.position.y;
+    global_origin.point.z = scan_pose_->pose.position.z;
+    RCLCPP_INFO(logger_,"Observation Buffer scan(%.2f, %.2f)",scan_pose_->pose.position.x,scan_pose_->pose.position.y);
     observation_list_.front().origin_ = global_origin.point;
     // make sure to pass on the raytrace/obstacle range
     // of the observation buffer to the observations

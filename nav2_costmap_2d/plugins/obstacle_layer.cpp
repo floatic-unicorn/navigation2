@@ -331,9 +331,9 @@ void
 ObstacleLayer::scanPoseCallback(
     const geometry_msgs::msg::PoseStamped & msg)
 {
-  scan_pose_.header = msg.header;
-  scan_pose_.pose = msg.pose;
-  RCLCPP_INFO(logger_,"scan(%.2f, %.2f)",scan_pose_.pose.position.x,scan_pose_.pose.position.y);
+  scan_pose_ = std::make_shared<geometry_msgs::msg::PoseStamped>(msg);
+  
+  RCLCPP_INFO(logger_,"scan(%.2f, %.2f)",scan_pose_->pose.position.x,scan_pose_->pose.position.y);
 }
 void
 ObstacleLayer::laserScanCallback(

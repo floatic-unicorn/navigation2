@@ -165,6 +165,7 @@ public:
   
   void scanPoseCallback(
     const geometry_msgs::msg::PoseStamped & msg);
+    
   
   /**
    * @brief  A callback to handle buffering PointCloud2 messages
@@ -234,7 +235,7 @@ protected:
   std::string global_frame_;  ///< @brief The global frame for the costmap
   double min_obstacle_height_;  ///< @brief Max Obstacle Height
   double max_obstacle_height_;  ///< @brief Max Obstacle Height
-  geometry_msgs::msg::PoseStamped scan_pose_;
+  geometry_msgs::msg::PoseStamped::SharedPtr scan_pose_;
   rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr scan_pose_sub_;
   /// @brief Used to project laser scans into point clouds
   laser_geometry::LaserProjection projector_;

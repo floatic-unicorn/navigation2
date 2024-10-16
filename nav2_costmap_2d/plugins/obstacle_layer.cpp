@@ -163,10 +163,7 @@ void ObstacleLayer::onInitialize()
     node->get_parameter(name_ + "." + source + "." + "inf_is_valid", inf_is_valid);
     node->get_parameter(name_ + "." + source + "." + "marking", marking);
     node->get_parameter(name_ + "." + source + "." + "clearing", clearing);
-    
-    auto scan_pose_sub_ = node->create_subscription<geometry_msgs::msg::PoseStamped>(
-    "/gsj/scan_pose", rclcpp::SensorDataQoS(),std::bind(&ObstacleLayer::poseCallback, this, std::placeholders::_1));
-    
+
     if (!(data_type == "PointCloud2" || data_type == "LaserScan")) {
       RCLCPP_FATAL(
         logger_,
@@ -191,7 +188,8 @@ void ObstacleLayer::onInitialize()
       "Creating an observation buffer for source %s, topic %s, frame %s",
       source.c_str(), topic.c_str(),
       sensor_frame.c_str());
-
+    scan_pose_sub_ = node->create_subscription<geometry_msgs::msg::PoseStamped>(
+      "/gsj/scan_pose", rclcpp::SensorDataQoS(),std::bind(&ObstacleLayer::scanPoseCallback, this, std::placeholders::_1));
     // create an observation buffer
     observation_buffers_.push_back(
       std::shared_ptr<ObservationBuffer
@@ -330,10 +328,9 @@ ObstacleLayer::dynamicParametersCallback(
   return result;
 }
 void
-ObstacleLayer::poseCallback(
+ObstacleLayer::scanPoseCallback(
     const geometry_msgs::msg::PoseStamped & msg)
 {
-  
   scan_pose_.header = msg.header;
   scan_pose_.pose = msg.pose;
   RCLCPP_INFO(logger_,"scan(%.2f, %.2f)",scan_pose_.pose.position.x,scan_pose_.pose.position.y);

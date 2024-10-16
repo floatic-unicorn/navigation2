@@ -51,15 +51,16 @@ namespace nav2_costmap_2d
 ObservationBuffer::ObservationBuffer(
   const nav2_util::LifecycleNode::WeakPtr & parent,
   std::string topic_name,
+  geometry_msgs::msg::PoseStamped scan_pose,
   double observation_keep_time,
   double expected_update_rate,
   double min_obstacle_height, double max_obstacle_height, double obstacle_max_range,
   double obstacle_min_range,
-  double raytrace_max_range, double raytrace_min_range, tf2_ros::Buffer & tf2_buffer,
+  double raytrace_max_range, double raytrace_min_range,
   std::string global_frame,
   std::string sensor_frame,
   tf2::Duration tf_tolerance)
-: tf2_buffer_(tf2_buffer),
+: scan_pose_(scan_pose),
   observation_keep_time_(rclcpp::Duration::from_seconds(observation_keep_time)),
   expected_update_rate_(rclcpp::Duration::from_seconds(expected_update_rate)),
   global_frame_(global_frame),
@@ -89,20 +90,25 @@ void ObservationBuffer::bufferCloud(const sensor_msgs::msg::PointCloud2 & cloud)
 
   // check whether the origin frame has been set explicitly
   // or whether we should get it from the cloud
-  std::string origin_frame = sensor_frame_ == "" ? cloud.header.frame_id : sensor_frame_;
 
   try {
     // given these observations come from sensors...
     // we'll need to store the origin pt of the sensor
-    geometry_msgs::msg::PointStamped local_origin;
-    local_origin.header.stamp = cloud.header.stamp;
-    local_origin.header.frame_id = origin_frame;
-    local_origin.point.x = 0;
-    local_origin.point.y = 0;
-    local_origin.point.z = 0;
-    tf2_buffer_.transform(local_origin, global_origin, global_frame_, tf_tolerance_);
-    tf2::convert(global_origin.point, observation_list_.front().origin_);
-
+    
+    // geometry_msgs::msg::PointStamped local_origin;
+    // local_origin.header.stamp = cloud.header.stamp;
+    // local_origin.header.frame_id = origin_frame;
+    // local_origin.point.x = 0;
+    // local_origin.point.y = 0;
+    // local_origin.point.z = 0;
+    //tf2_buffer_.transform(local_origin, global_origin, global_frame_, tf_tolerance_);
+    //tf2::convert(global_origin.point, observation_list_.front().origin_);
+    global_origin.header.stamp = cloud.header.stamp;
+    global_origin.header.frame_id = cloud.header.frame_id;
+    global_origin.point.x = scan_pose_.pose.position.x;
+    global_origin.point.y = scan_pose_.pose.position.y;
+    global_origin.point.z = scan_pose_.pose.position.z;
+    
     // make sure to pass on the raytrace/obstacle range
     // of the observation buffer to the observations
     observation_list_.front().raytrace_max_range_ = raytrace_max_range_;
@@ -110,10 +116,10 @@ void ObservationBuffer::bufferCloud(const sensor_msgs::msg::PointCloud2 & cloud)
     observation_list_.front().obstacle_max_range_ = obstacle_max_range_;
     observation_list_.front().obstacle_min_range_ = obstacle_min_range_;
 
-    sensor_msgs::msg::PointCloud2 global_frame_cloud;
+    sensor_msgs::msg::PointCloud2 global_frame_cloud = cloud;
 
     // transform the point cloud
-    tf2_buffer_.transform(cloud, global_frame_cloud, global_frame_, tf_tolerance_);
+    //tf2_buffer_.transform(cloud, global_frame_cloud, global_frame_, tf_tolerance_);
     global_frame_cloud.header.stamp = cloud.header.stamp;
 
     // now we need to remove observations from the cloud that are below

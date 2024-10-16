@@ -163,7 +163,10 @@ void ObstacleLayer::onInitialize()
     node->get_parameter(name_ + "." + source + "." + "inf_is_valid", inf_is_valid);
     node->get_parameter(name_ + "." + source + "." + "marking", marking);
     node->get_parameter(name_ + "." + source + "." + "clearing", clearing);
-
+    geometry_msgs::msg::PoseStamped scan_pose;
+    auto scan_pose_sub_ = node->create_subscription<geometry_msgs::msg::PoseStamped>(
+    "/gsj/scan_pose", rclcpp::SensorDataQoS(),std::bind(&ObstacleLayer::poseCallback, this, std::placeholders::_1));
+    
     if (!(data_type == "PointCloud2" || data_type == "LaserScan")) {
       RCLCPP_FATAL(
         logger_,
@@ -194,10 +197,10 @@ void ObstacleLayer::onInitialize()
       std::shared_ptr<ObservationBuffer
       >(
         new ObservationBuffer(
-          node, topic, observation_keep_time, expected_update_rate,
+          node, topic, scan_pose, observation_keep_time, expected_update_rate,
           min_obstacle_height,
           max_obstacle_height, obstacle_max_range, obstacle_min_range, raytrace_max_range,
-          raytrace_min_range, *tf_,
+          raytrace_min_range,
           global_frame_,
           sensor_frame, tf2::durationFromSec(transform_tolerance))));
 
@@ -220,6 +223,8 @@ void ObstacleLayer::onInitialize()
 
     rmw_qos_profile_t custom_qos_profile = rmw_qos_profile_sensor_data;
     custom_qos_profile.depth = 50;
+    
+    
 
     // create a callback for the topic
     if (data_type == "LaserScan") {
@@ -324,7 +329,13 @@ ObstacleLayer::dynamicParametersCallback(
   result.successful = true;
   return result;
 }
-
+void
+ObstacleLayer::poseCallback(
+    geometry_msgs::msg::PoseStamped::ConstSharedPtr message)
+{
+  scan_pose_.header = message->header;
+  scan_pose_.pose = message->pose;
+}
 void
 ObstacleLayer::laserScanCallback(
   sensor_msgs::msg::LaserScan::ConstSharedPtr message,

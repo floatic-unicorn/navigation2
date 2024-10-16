@@ -57,6 +57,7 @@
 #include "nav2_costmap_2d/layered_costmap.hpp"
 #include "nav2_costmap_2d/observation_buffer.hpp"
 #include "nav2_costmap_2d/footprint.hpp"
+#include "geometry_msgs/msg/pose_stamped.hpp"
 
 namespace nav2_costmap_2d
 {
@@ -161,11 +162,16 @@ public:
     sensor_msgs::msg::LaserScan::ConstSharedPtr message,
     const std::shared_ptr<nav2_costmap_2d::ObservationBuffer> & buffer);
 
+  
+  void poseCallback(
+    geometry_msgs::msg::PoseStamped::ConstSharedPtr message);
+  
   /**
    * @brief  A callback to handle buffering PointCloud2 messages
    * @param message The message returned from a message notifier
    * @param buffer A pointer to the observation buffer to update
    */
+  
   void pointCloud2Callback(
     sensor_msgs::msg::PointCloud2::ConstSharedPtr message,
     const std::shared_ptr<nav2_costmap_2d::ObservationBuffer> & buffer);
@@ -228,7 +234,7 @@ protected:
   std::string global_frame_;  ///< @brief The global frame for the costmap
   double min_obstacle_height_;  ///< @brief Max Obstacle Height
   double max_obstacle_height_;  ///< @brief Max Obstacle Height
-
+geometry_msgs::msg::PoseStamped scan_pose_;
   /// @brief Used to project laser scans into point clouds
   laser_geometry::LaserProjection projector_;
   /// @brief Used for the observation message filters
@@ -249,7 +255,7 @@ protected:
   // Used only for testing purposes
   std::vector<nav2_costmap_2d::Observation> static_clearing_observations_;
   std::vector<nav2_costmap_2d::Observation> static_marking_observations_;
-
+  
   bool rolling_window_;
   bool was_reset_;
   int combination_method_;

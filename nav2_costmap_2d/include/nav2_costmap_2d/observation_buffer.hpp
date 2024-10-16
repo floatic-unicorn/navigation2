@@ -49,7 +49,7 @@
 #include "nav2_costmap_2d/observation.hpp"
 #include "nav2_util/lifecycle_node.hpp"
 
-
+extern std::mutex shared_mutex;
 namespace nav2_costmap_2d
 {
 /**
@@ -75,6 +75,7 @@ public:
    * @param  sensor_frame The frame of the origin of the sensor, can be left blank to be read from the messages
    * @param  tf_tolerance The amount of time to wait for a transform to be available when setting a new global frame
    */
+  
   ObservationBuffer(
     const nav2_util::LifecycleNode::WeakPtr & parent,
     std::string topic_name,
@@ -98,6 +99,7 @@ public:
    * <b>Note: The burden is on the user to make sure the transform is available... ie they should use a MessageNotifier</b>
    * @param  cloud The cloud to be buffered
    */
+  
   void bufferCloud(const sensor_msgs::msg::PointCloud2 & cloud);
 
   /**

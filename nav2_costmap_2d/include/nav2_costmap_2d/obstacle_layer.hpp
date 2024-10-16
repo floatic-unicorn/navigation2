@@ -136,6 +136,7 @@ public:
    * @brief Callback executed when a parameter change is detected
    * @param event ParameterEvent message
    */
+  
   rcl_interfaces::msg::SetParametersResult
   dynamicParametersCallback(std::vector<rclcpp::Parameter> parameters);
 
@@ -143,7 +144,7 @@ public:
    * @brief triggers the update of observations buffer
    */
   void resetBuffersLastUpdated();
-
+  
   /**
    * @brief  A callback to handle buffering LaserScan messages
    * @param message The message returned from a message notifier
@@ -235,7 +236,6 @@ protected:
   std::string global_frame_;  ///< @brief The global frame for the costmap
   double min_obstacle_height_;  ///< @brief Max Obstacle Height
   double max_obstacle_height_;  ///< @brief Max Obstacle Height
-  std::recursive_mutex mtx_;
   geometry_msgs::msg::PoseStamped::SharedPtr scan_pose_;
   rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr scan_pose_sub_;
   /// @brief Used to project laser scans into point clouds

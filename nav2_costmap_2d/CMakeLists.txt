@@ -24,7 +24,8 @@ find_package(tf2_ros REQUIRED)
 find_package(tf2_sensor_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(angles REQUIRED)
-
+find_package(PCL 1.12 REQUIRED COMPONENTS common io)
+find_package(pcl_conversions REQUIRED)
 remove_definitions(-DDISABLE_LIBUSB-1.0)
 find_package(Eigen3 REQUIRED)
 
@@ -32,11 +33,15 @@ nav2_package()
 
 include_directories(
   include
+  SYSTEM
   ${EIGEN3_INCLUDE_DIRS}
+  ${PCL_INCLUDE_DIRS}
+  
 )
 
-add_definitions(${EIGEN3_DEFINITIONS})
 
+add_definitions(${EIGEN3_DEFINITIONS})
+add_definitions(${PCL_DEFINITIONS})
 add_library(nav2_costmap_2d_core SHARED
   src/array_parser.cpp
   src/costmap_2d.cpp
@@ -74,12 +79,15 @@ set(dependencies
   tf2_sensor_msgs
   visualization_msgs
   angles
+  pcl_conversions
 )
 
 ament_target_dependencies(nav2_costmap_2d_core
   ${dependencies}
 )
-
+target_link_libraries(nav2_costmap_2d_core
+  ${PCL_LIBRARIES}
+)
 add_library(layers SHARED
   plugins/local_inflation_layer.cpp
   plugins/inflation_layer.cpp
@@ -90,12 +98,14 @@ add_library(layers SHARED
   plugins/voxel_layer.cpp
   plugins/range_sensor_layer.cpp
   plugins/denoise_layer.cpp
+  
 )
 ament_target_dependencies(layers
   ${dependencies}
 )
 target_link_libraries(layers
   nav2_costmap_2d_core
+  
 )
 
 add_library(filters SHARED

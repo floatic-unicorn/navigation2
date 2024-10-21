@@ -41,8 +41,12 @@
 #include <string>
 #include <vector>
 #include <chrono>
-
+#include <pcl/point_types.h>
+#include <pcl/common/transforms.h>
+#include <pcl/point_cloud.h>
+#include <pcl_conversions/pcl_conversions.h>
 #include "tf2/convert.h"
+#include "tf2/utils.h"
 #include "sensor_msgs/point_cloud2_iterator.hpp"
 using namespace std::chrono_literals;
 std::mutex shared_mutex;
@@ -89,8 +93,9 @@ void ObservationBuffer::bufferCloud(const sensor_msgs::msg::PointCloud2 & cloud)
 
   // create a new observation on the list to be populated
   observation_list_.push_front(Observation());
-
+  
   // check whether the origin frame has been set explicitly
+  
   // or whether we should get it from the cloud
 
   try {
@@ -105,12 +110,43 @@ void ObservationBuffer::bufferCloud(const sensor_msgs::msg::PointCloud2 & cloud)
     // local_origin.point.z = 0;
     //tf2_buffer_.transform(local_origin, global_origin, global_frame_, tf_tolerance_);
     //tf2::convert(global_origin.point, observation_list_.front().origin_);
+    
     global_origin.header.stamp = scan_pose_->header.stamp;
     global_origin.header.frame_id = scan_pose_->header.frame_id;
     global_origin.point.x = scan_pose_->pose.position.x;
     global_origin.point.y = scan_pose_->pose.position.y;
     global_origin.point.z = scan_pose_->pose.position.z;
     RCLCPP_INFO(logger_,"Observation Buffer scan(%.2f, %.2f)",scan_pose_->pose.position.x,scan_pose_->pose.position.y);
+    geometry_msgs::msg::TransformStamped map_to_robot;
+    sensor_msgs::msg::PointCloud2 global_frame_cloud;
+    map_to_robot.header.frame_id = scan_pose_->header.frame_id;
+    map_to_robot.header.stamp = scan_pose_->header.stamp;
+    map_to_robot.transform.translation.x = scan_pose_->pose.position.x;
+    map_to_robot.transform.translation.y = scan_pose_->pose.position.y;
+    map_to_robot.transform.translation.z = scan_pose_->pose.position.z;
+    map_to_robot.transform.rotation = scan_pose_->pose.orientation;
+    // tf::Quaternion q;
+    // q.setW(scan_pose_->orientation.w);
+    // q.setX(scan_pose_->orientation.x);
+    // q.setY(scan_pose_->orientation.y);
+    // q.setZ(scan_pose_->orientation.z);
+    // tf::Matrix3x3 m(q);
+    // double roll, pitch, yaw;
+    // m.getRPY(roll, pitch, yaw);
+    double yaw = tf2::getYaw(scan_pose_->pose.orientation);
+    Eigen::Matrix4f trans;
+    trans <<1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1;
+    trans(0,0) = cosf(yaw);
+    trans(0,1) = -sinf(yaw);
+    trans(1,0) = sinf(yaw);
+    trans(1,1) = cosf(yaw);
+    trans(0,3) = scan_pose_->pose.position.x;
+    trans(1,3) = scan_pose_->pose.position.y;
+    trans(2,3) = scan_pose_->pose.position.z;
+
     observation_list_.front().origin_ = global_origin.point;
     // make sure to pass on the raytrace/obstacle range
     // of the observation buffer to the observations
@@ -118,13 +154,16 @@ void ObservationBuffer::bufferCloud(const sensor_msgs::msg::PointCloud2 & cloud)
     observation_list_.front().raytrace_min_range_ = raytrace_min_range_;
     observation_list_.front().obstacle_max_range_ = obstacle_max_range_;
     observation_list_.front().obstacle_min_range_ = obstacle_min_range_;
-
-    sensor_msgs::msg::PointCloud2 global_frame_cloud = cloud;
-
+    
+    pcl::PointCloud<pcl::PointXYZ> pcl_cloud;
+    pcl::PointCloud<pcl::PointXYZ> pcl_transformed_cloud;
+    
+    pcl::fromROSMsg(cloud, pcl_cloud);
+    pcl::transformPointCloud(pcl_cloud, pcl_transformed_cloud, trans);
+    tf2::doTransform(cloud, global_frame_cloud, map_to_robot);
     // transform the point cloud
     //tf2_buffer_.transform(cloud, global_frame_cloud, global_frame_, tf_tolerance_);
     global_frame_cloud.header.stamp = cloud.header.stamp;
-
     // now we need to remove observations from the cloud that are below
     // or above our height thresholds
     sensor_msgs::msg::PointCloud2 & observation_cloud = *(observation_list_.front().cloud_);
@@ -140,7 +179,7 @@ void ObservationBuffer::bufferCloud(const sensor_msgs::msg::PointCloud2 & cloud)
     sensor_msgs::PointCloud2Modifier modifier(observation_cloud);
     modifier.resize(cloud_size);
     unsigned int point_count = 0;
-
+    
     // copy over the points that are within our height bounds
     sensor_msgs::PointCloud2Iterator<float> iter_z(global_frame_cloud, "z");
     std::vector<unsigned char>::const_iterator iter_global = global_frame_cloud.data.begin(),

@@ -128,6 +128,9 @@ void ObstacleLayer::onInitialize()
   std::stringstream ss(topics_string);
 
   std::string source;
+  scan_pose_ = std::make_shared<geometry_msgs::msg::PoseStamped>();
+  scan_pose_sub_ = node->create_subscription<geometry_msgs::msg::PoseStamped>(
+      "/gsj/scan_pose", rclcpp::SensorDataQoS(),std::bind(&ObstacleLayer::scanPoseCallback, this, std::placeholders::_1));
   while (ss >> source) {
     // get the parameters for the specific topic
     double observation_keep_time, expected_update_rate, min_obstacle_height, max_obstacle_height;
@@ -188,9 +191,6 @@ void ObstacleLayer::onInitialize()
       "Creating an observation buffer for source %s, topic %s, frame %s",
       source.c_str(), topic.c_str(),
       sensor_frame.c_str());
-    scan_pose_sub_ = node->create_subscription<geometry_msgs::msg::PoseStamped>(
-      "/gsj/scan_pose", rclcpp::SensorDataQoS(),std::bind(&ObstacleLayer::scanPoseCallback, this, std::placeholders::_1));
-      scan_pose_ = std::make_shared<geometry_msgs::msg::PoseStamped>();
     // create an observation buffer
     observation_buffers_.push_back(
       std::shared_ptr<ObservationBuffer
@@ -221,19 +221,24 @@ void ObstacleLayer::onInitialize()
       global_frame_.c_str(), expected_update_rate, observation_keep_time);
 
     rmw_qos_profile_t custom_qos_profile = rmw_qos_profile_sensor_data;
-    custom_qos_profile.depth = 50;
+    custom_qos_profile.depth = 30;
     
     
 
     // create a callback for the topic
     if (data_type == "LaserScan") {
-      auto sub = std::make_shared<message_filters::Subscriber<sensor_msgs::msg::LaserScan,
-          rclcpp_lifecycle::LifecycleNode>>(node, topic, custom_qos_profile, sub_opt);
-      if (inf_is_valid) {
-        sub->registerCallback(std::bind(&ObstacleLayer::laserScanValidInfCallback, this, std::placeholders::_1, observation_buffers_.back()));
-      } else {
-        sub->registerCallback(std::bind(&ObstacleLayer::laserScanCallback, this, std::placeholders::_1, observation_buffers_.back()));
-      }
+
+      RCLCPP_WARN(
+        logger_,
+        "obstacle_layer: LaserScan is not applicable to observation_buffer in gsj_ver.");
+
+      // auto sub = std::make_shared<message_filters::Subscriber<sensor_msgs::msg::LaserScan,
+      //     rclcpp_lifecycle::LifecycleNode>>(node, topic, custom_qos_profile, sub_opt);
+      // if (inf_is_valid) {
+      //   sub->registerCallback(std::bind(&ObstacleLayer::laserScanValidInfCallback, this, std::placeholders::_1, observation_buffers_.back()));
+      // } else {
+      //   sub->registerCallback(std::bind(&ObstacleLayer::laserScanCallback, this, std::placeholders::_1, observation_buffers_.back()));
+      // }
       // sub->unsubscribe();
       
       // auto filter = std::make_shared<tf2_ros::MessageFilter<sensor_msgs::msg::LaserScan>>(
@@ -255,7 +260,7 @@ void ObstacleLayer::onInitialize()
       //       observation_buffers_.back()));
       // }
 
-      observation_subscribers_.push_back(sub);
+      //observation_subscribers_.push_back(sub);
 
       // observation_notifiers_.push_back(filter);
       // observation_notifiers_.back()->setTolerance(rclcpp::Duration::from_seconds(0.05));
@@ -270,28 +275,13 @@ void ObstacleLayer::onInitialize()
           logger_,
           "obstacle_layer: inf_is_valid option is not applicable to PointCloud observations.");
       }
-
-      // auto filter = std::make_shared<tf2_ros::MessageFilter<sensor_msgs::msg::PointCloud2>>(
-      //   *sub, *tf_, global_frame_, 50,
-      //   node->get_node_logging_interface(),
-      //   node->get_node_clock_interface(),
-      //   tf2::durationFromSec(transform_tolerance));
-      
       sub->registerCallback(
         std::bind(
           &ObstacleLayer::pointCloud2Callback, this, std::placeholders::_1,
           observation_buffers_.back()));
 
       observation_subscribers_.push_back(sub);
-      //observation_notifiers_.push_back(filter);
     }
-
-    // if (sensor_frame != "") {
-    //   std::vector<std::string> target_frames;
-    //   target_frames.push_back(global_frame_);
-    //   target_frames.push_back(sensor_frame);
-    //   observation_notifiers_.back()->setTargetFrames(target_frames);
-    // }
   }
 }
 
@@ -334,7 +324,6 @@ ObstacleLayer::scanPoseCallback(
 {
   std::lock_guard<std::recursive_mutex> lock(shared_mutex);
   *scan_pose_ = msg;
-  //RCLCPP_INFO(logger_,"scan(%.2f, %.2f)",scan_pose_->pose.position.x,scan_pose_->pose.position.y);
   
 }
 void

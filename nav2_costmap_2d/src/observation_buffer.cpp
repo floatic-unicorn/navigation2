@@ -41,10 +41,10 @@
 #include <string>
 #include <vector>
 #include <chrono>
-#include <pcl/point_types.h>
-#include <pcl/common/transforms.h>
-#include <pcl/point_cloud.h>
-#include <pcl_conversions/pcl_conversions.h>
+// #include <pcl/point_types.h>
+// #include <pcl/common/transforms.h>
+// #include <pcl/point_cloud.h>
+// #include <pcl_conversions/pcl_conversions.h>
 #include "tf2/convert.h"
 #include "tf2/utils.h"
 #include "sensor_msgs/point_cloud2_iterator.hpp"
@@ -89,7 +89,9 @@ ObservationBuffer::~ObservationBuffer()
 void ObservationBuffer::bufferCloud(const sensor_msgs::msg::PointCloud2 & cloud)
 {
   std::lock_guard<std::recursive_mutex> lock(shared_mutex);
+  sensor_msgs::msg::PointCloud2 global_frame_cloud;
   geometry_msgs::msg::PointStamped global_origin;
+  geometry_msgs::msg::TransformStamped map_to_robot;
   // create a new observation on the list to be populated
   observation_list_.push_front(Observation());
   
@@ -100,24 +102,13 @@ void ObservationBuffer::bufferCloud(const sensor_msgs::msg::PointCloud2 & cloud)
   try {
     // given these observations come from sensors...
     // we'll need to store the origin pt of the sensor
-    
-    // geometry_msgs::msg::PointStamped local_origin;
-    // local_origin.header.stamp = cloud.header.stamp;
-    // local_origin.header.frame_id = origin_frame;
-    // local_origin.point.x = 0;
-    // local_origin.point.y = 0;
-    // local_origin.point.z = 0;
-    //tf2_buffer_.transform(local_origin, global_origin, global_frame_, tf_tolerance_);
-    //tf2::convert(global_origin.point, observation_list_.front().origin_);
-    
     global_origin.header.stamp = scan_pose_->header.stamp;
     global_origin.header.frame_id = scan_pose_->header.frame_id;
     global_origin.point.x = scan_pose_->pose.position.x;
     global_origin.point.y = scan_pose_->pose.position.y;
     global_origin.point.z = scan_pose_->pose.position.z;
-    RCLCPP_INFO(logger_,"Observation Buffer scan(%.2f, %.2f)",scan_pose_->pose.position.x,scan_pose_->pose.position.y);
-    geometry_msgs::msg::TransformStamped map_to_robot;
-    sensor_msgs::msg::PointCloud2 global_frame_cloud;
+    //RCLCPP_INFO(logger_,"Obs Buffer::Scan Address %d (%.2f, %.2f)",scan_pose_.get(),scan_pose_->pose.position.x,scan_pose_->pose.position.y);
+    
     map_to_robot.header.frame_id = scan_pose_->header.frame_id;
     map_to_robot.header.stamp = scan_pose_->header.stamp;
     map_to_robot.transform.translation.x = scan_pose_->pose.position.x;
@@ -154,16 +145,16 @@ void ObservationBuffer::bufferCloud(const sensor_msgs::msg::PointCloud2 & cloud)
     observation_list_.front().raytrace_min_range_ = raytrace_min_range_;
     observation_list_.front().obstacle_max_range_ = obstacle_max_range_;
     observation_list_.front().obstacle_min_range_ = obstacle_min_range_;    
+    //Transform using pcl
     // pcl::PointCloud<pcl::PointXYZ> pcl_cloud;
     // pcl::PointCloud<pcl::PointXYZ> pcl_transformed_cloud;
-    
     // pcl::fromROSMsg(cloud, pcl_cloud);
     // pcl::transformPointCloud(pcl_cloud, pcl_transformed_cloud, trans);
     
+    //Transform using tf2
     tf2::doTransform(cloud, global_frame_cloud, map_to_robot);
-    // transform the point cloud
-    //tf2_buffer_.transform(cloud, global_frame_cloud, global_frame_, tf_tolerance_);
     global_frame_cloud.header.stamp = cloud.header.stamp;
+    
     // now we need to remove observations from the cloud that are below
     // or above our height thresholds
     sensor_msgs::msg::PointCloud2 & observation_cloud = *(observation_list_.front().cloud_);

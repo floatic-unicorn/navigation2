@@ -49,7 +49,7 @@
 #include "nav2_costmap_2d/observation.hpp"
 #include "nav2_util/lifecycle_node.hpp"
 
-extern std::mutex shared_mutex;
+extern std::recursive_mutex shared_mutex;
 namespace nav2_costmap_2d
 {
 /**

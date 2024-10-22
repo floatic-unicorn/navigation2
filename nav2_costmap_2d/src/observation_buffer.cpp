@@ -49,7 +49,7 @@
 #include "tf2/utils.h"
 #include "sensor_msgs/point_cloud2_iterator.hpp"
 using namespace std::chrono_literals;
-std::mutex shared_mutex;
+std::recursive_mutex shared_mutex;
 namespace nav2_costmap_2d
 {
 ObservationBuffer::ObservationBuffer(
@@ -88,9 +88,8 @@ ObservationBuffer::~ObservationBuffer()
 
 void ObservationBuffer::bufferCloud(const sensor_msgs::msg::PointCloud2 & cloud)
 {
-  std::lock_guard<std::mutex> lock(shared_mutex);
+  std::lock_guard<std::recursive_mutex> lock(shared_mutex);
   geometry_msgs::msg::PointStamped global_origin;
-
   // create a new observation on the list to be populated
   observation_list_.push_front(Observation());
   
@@ -133,33 +132,34 @@ void ObservationBuffer::bufferCloud(const sensor_msgs::msg::PointCloud2 & cloud)
     // tf::Matrix3x3 m(q);
     // double roll, pitch, yaw;
     // m.getRPY(roll, pitch, yaw);
-    double yaw = tf2::getYaw(scan_pose_->pose.orientation);
-    Eigen::Matrix4f trans;
-    trans <<1, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1;
-    trans(0,0) = cosf(yaw);
-    trans(0,1) = -sinf(yaw);
-    trans(1,0) = sinf(yaw);
-    trans(1,1) = cosf(yaw);
-    trans(0,3) = scan_pose_->pose.position.x;
-    trans(1,3) = scan_pose_->pose.position.y;
-    trans(2,3) = scan_pose_->pose.position.z;
+    // double yaw = tf2::getYaw(scan_pose_->pose.orientation);
+    // Eigen::Matrix4f trans;
+    // trans = 1, 0, 0, 0,
+    //         0, 1, 0, 0,
+    //         0, 0, 1, 0,
+    //         0, 0, 0, 1;
+    // trans(0,0) = cosf(yaw);
+    // trans(0,1) = -sinf(yaw);
+    // trans(1,0) = sinf(yaw);
+    // trans(1,1) = cosf(yaw);
+    // trans(0,3) = scan_pose_->pose.position.x;
+    // trans(1,3) = scan_pose_->pose.position.y;
+    // trans(2,3) = scan_pose_->pose.position.z;
 
-    observation_list_.front().origin_ = global_origin.point;
+    
     // make sure to pass on the raytrace/obstacle range
     // of the observation buffer to the observations
+    observation_list_.front().origin_ = global_origin.point;
     observation_list_.front().raytrace_max_range_ = raytrace_max_range_;
     observation_list_.front().raytrace_min_range_ = raytrace_min_range_;
     observation_list_.front().obstacle_max_range_ = obstacle_max_range_;
-    observation_list_.front().obstacle_min_range_ = obstacle_min_range_;
+    observation_list_.front().obstacle_min_range_ = obstacle_min_range_;    
+    // pcl::PointCloud<pcl::PointXYZ> pcl_cloud;
+    // pcl::PointCloud<pcl::PointXYZ> pcl_transformed_cloud;
     
-    pcl::PointCloud<pcl::PointXYZ> pcl_cloud;
-    pcl::PointCloud<pcl::PointXYZ> pcl_transformed_cloud;
+    // pcl::fromROSMsg(cloud, pcl_cloud);
+    // pcl::transformPointCloud(pcl_cloud, pcl_transformed_cloud, trans);
     
-    pcl::fromROSMsg(cloud, pcl_cloud);
-    pcl::transformPointCloud(pcl_cloud, pcl_transformed_cloud, trans);
     tf2::doTransform(cloud, global_frame_cloud, map_to_robot);
     // transform the point cloud
     //tf2_buffer_.transform(cloud, global_frame_cloud, global_frame_, tf_tolerance_);

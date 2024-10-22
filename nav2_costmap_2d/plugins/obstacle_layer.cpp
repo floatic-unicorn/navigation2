@@ -276,7 +276,7 @@ void ObstacleLayer::onInitialize()
       //   node->get_node_logging_interface(),
       //   node->get_node_clock_interface(),
       //   tf2::durationFromSec(transform_tolerance));
-
+      
       sub->registerCallback(
         std::bind(
           &ObstacleLayer::pointCloud2Callback, this, std::placeholders::_1,
@@ -332,9 +332,9 @@ void
 ObstacleLayer::scanPoseCallback(
     const geometry_msgs::msg::PoseStamped & msg)
 {
-  std::lock_guard<std::mutex> lock(shared_mutex);
+  std::lock_guard<std::recursive_mutex> lock(shared_mutex);
   *scan_pose_ = msg;
-  RCLCPP_INFO(logger_,"scan(%.2f, %.2f)",scan_pose_->pose.position.x,scan_pose_->pose.position.y);
+  //RCLCPP_INFO(logger_,"scan(%.2f, %.2f)",scan_pose_->pose.position.x,scan_pose_->pose.position.y);
   
 }
 void
@@ -428,7 +428,8 @@ ObstacleLayer::pointCloud2Callback(
   sensor_msgs::msg::PointCloud2::ConstSharedPtr message,
   const std::shared_ptr<ObservationBuffer> & buffer)
 {
-  // buffer the point cloud
+  std::lock_guard<std::recursive_mutex> lock(shared_mutex);
+  //buffer the point cloud
   buffer->lock();
   buffer->bufferCloud(*message);
   buffer->unlock();

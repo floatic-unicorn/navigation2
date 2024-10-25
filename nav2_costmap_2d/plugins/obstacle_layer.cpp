@@ -83,7 +83,7 @@ void ObstacleLayer::onInitialize()
   declareParameter("combination_method", rclcpp::ParameterValue(1));
   declareParameter("observation_sources", rclcpp::ParameterValue(std::string("")));
 
-  auto node = node_.lock();
+  const auto node = node_.lock();
   if (!node) {
     throw std::runtime_error{"Failed to lock node"};
   }
@@ -128,13 +128,13 @@ void ObstacleLayer::onInitialize()
   std::stringstream ss(topics_string);
 
   std::string source;
-  scan_pose_ = std::make_shared<geometry_msgs::msg::PoseStamped>();
+  map_to_robot_ = std::make_shared<geometry_msgs::msg::TransformStamped>();
   scan_pose_sub_ = node->create_subscription<geometry_msgs::msg::PoseStamped>(
       "/gsj/scan_pose", rclcpp::SensorDataQoS(),std::bind(&ObstacleLayer::scanPoseCallback, this, std::placeholders::_1));
   while (ss >> source) {
     // get the parameters for the specific topic
     double observation_keep_time, expected_update_rate, min_obstacle_height, max_obstacle_height;
-    std::string topic, sensor_frame, data_type;
+    std::string topic, robot_frame, sensor_frame, data_type;
     bool inf_is_valid, clearing, marking;
 
     declareParameter(source + "." + "topic", rclcpp::ParameterValue(source));
@@ -185,18 +185,19 @@ void ObstacleLayer::onInitialize()
     node->get_parameter(name_ + "." + source + "." + "raytrace_min_range", raytrace_min_range);
     node->get_parameter(name_ + "." + source + "." + "raytrace_max_range", raytrace_max_range);
 
-
     RCLCPP_DEBUG(
       logger_,
       "Creating an observation buffer for source %s, topic %s, frame %s",
       source.c_str(), topic.c_str(),
       sensor_frame.c_str());
+    
+  
     // create an observation buffer
     observation_buffers_.push_back(
       std::shared_ptr<ObservationBuffer
       >(
         new ObservationBuffer(
-          node, topic, scan_pose_, observation_keep_time, expected_update_rate,
+          node, topic, map_to_robot_, observation_keep_time, expected_update_rate,
           min_obstacle_height,
           max_obstacle_height, obstacle_max_range, obstacle_min_range, raytrace_max_range,
           raytrace_min_range,
@@ -266,6 +267,7 @@ void ObstacleLayer::onInitialize()
       // observation_notifiers_.back()->setTolerance(rclcpp::Duration::from_seconds(0.05));
 
     } else {
+      sub_opt.callback_group = node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
       auto sub = std::make_shared<message_filters::Subscriber<sensor_msgs::msg::PointCloud2,
           rclcpp_lifecycle::LifecycleNode>>(node, topic, custom_qos_profile, sub_opt);
       sub->unsubscribe();
@@ -323,8 +325,11 @@ ObstacleLayer::scanPoseCallback(
     const geometry_msgs::msg::PoseStamped & msg)
 {
   std::lock_guard<std::recursive_mutex> lock(shared_mutex);
-  *scan_pose_ = msg;
-  
+  map_to_robot_->header = msg.header;
+  map_to_robot_->transform.translation.x = msg.pose.position.x;
+  map_to_robot_->transform.translation.y = msg.pose.position.y;
+  map_to_robot_->transform.translation.z = msg.pose.position.z;
+  map_to_robot_->transform.rotation = msg.pose.orientation;
 }
 void
 ObstacleLayer::laserScanCallback(
@@ -417,7 +422,7 @@ ObstacleLayer::pointCloud2Callback(
   sensor_msgs::msg::PointCloud2::ConstSharedPtr message,
   const std::shared_ptr<ObservationBuffer> & buffer)
 {
-  std::lock_guard<std::recursive_mutex> lock(shared_mutex);
+  // std::lock_guard<std::recursive_mutex> lock(shared_mutex);
   //buffer the point cloud
   buffer->lock();
   buffer->bufferCloud(*message);

@@ -47,6 +47,8 @@
 // #include <pcl_conversions/pcl_conversions.h>
 #include "tf2/convert.h"
 #include "tf2/utils.h"
+#include "tf2_ros/buffer.h"
+#include "tf2_ros/transform_listener.h"
 #include "sensor_msgs/point_cloud2_iterator.hpp"
 using namespace std::chrono_literals;
 std::recursive_mutex shared_mutex;
@@ -55,7 +57,7 @@ namespace nav2_costmap_2d
 ObservationBuffer::ObservationBuffer(
   const nav2_util::LifecycleNode::WeakPtr & parent,
   std::string topic_name,
-  geometry_msgs::msg::PoseStamped::SharedPtr scan_pose,
+  geometry_msgs::msg::TransformStamped::SharedPtr map_to_robot,
   double observation_keep_time,
   double expected_update_rate,
   double min_obstacle_height, double max_obstacle_height, double obstacle_max_range,
@@ -64,7 +66,7 @@ ObservationBuffer::ObservationBuffer(
   std::string global_frame,
   std::string sensor_frame,
   tf2::Duration tf_tolerance)
-: scan_pose_(scan_pose),
+: map_to_robot_(map_to_robot),
   observation_keep_time_(rclcpp::Duration::from_seconds(observation_keep_time)),
   expected_update_rate_(rclcpp::Duration::from_seconds(expected_update_rate)),
   global_frame_(global_frame),
@@ -80,6 +82,19 @@ ObservationBuffer::ObservationBuffer(
   logger_ = node->get_logger();
   last_updated_ = node->now();
   
+  std::string robot_frame = "base_footprint";
+
+  rclcpp::Rate tf_search_rate(1);
+  tf2_ros::Buffer tf_buffer(node->get_clock());
+  tf2_ros::TransformListener tf_listener(tf_buffer);
+  while (rclcpp::ok() && !tf_buffer.canTransform(robot_frame, sensor_frame, tf2::TimePointZero)) {
+  RCLCPP_WARN_STREAM(node->get_logger(),
+                      "No tf between " << robot_frame << " and " << sensor_frame);
+  tf_search_rate.sleep();
+  }
+  const auto robot_to_sensor = tf_buffer.lookupTransform(robot_frame, sensor_frame, tf2::TimePointZero);
+  robot_to_sensor_ = std::make_shared<geometry_msgs::msg::TransformStamped>();
+  robot_to_sensor_->transform = robot_to_sensor.transform;
 }
 
 ObservationBuffer::~ObservationBuffer()
@@ -89,6 +104,7 @@ ObservationBuffer::~ObservationBuffer()
 void ObservationBuffer::bufferCloud(const sensor_msgs::msg::PointCloud2 & cloud)
 {
   std::lock_guard<std::recursive_mutex> lock(shared_mutex);
+  sensor_msgs::msg::PointCloud2 robot_frame_cloud;
   sensor_msgs::msg::PointCloud2 global_frame_cloud;
   geometry_msgs::msg::PointStamped global_origin;
   geometry_msgs::msg::TransformStamped map_to_robot;
@@ -102,19 +118,19 @@ void ObservationBuffer::bufferCloud(const sensor_msgs::msg::PointCloud2 & cloud)
   try {
     // given these observations come from sensors...
     // we'll need to store the origin pt of the sensor
-    global_origin.header.stamp = scan_pose_->header.stamp;
-    global_origin.header.frame_id = scan_pose_->header.frame_id;
-    global_origin.point.x = scan_pose_->pose.position.x;
-    global_origin.point.y = scan_pose_->pose.position.y;
-    global_origin.point.z = scan_pose_->pose.position.z;
+    global_origin.header.stamp = map_to_robot_->header.stamp;
+    global_origin.header.frame_id = map_to_robot_->header.frame_id;
+    global_origin.point.x = map_to_robot_->transform.translation.x;
+    global_origin.point.y = map_to_robot_->transform.translation.y;
+    global_origin.point.z = map_to_robot_->transform.translation.z;
     //RCLCPP_INFO(logger_,"Obs Buffer::Scan Address %d (%.2f, %.2f)",scan_pose_.get(),scan_pose_->pose.position.x,scan_pose_->pose.position.y);
     
-    map_to_robot.header.frame_id = scan_pose_->header.frame_id;
-    map_to_robot.header.stamp = scan_pose_->header.stamp;
-    map_to_robot.transform.translation.x = scan_pose_->pose.position.x;
-    map_to_robot.transform.translation.y = scan_pose_->pose.position.y;
-    map_to_robot.transform.translation.z = scan_pose_->pose.position.z;
-    map_to_robot.transform.rotation = scan_pose_->pose.orientation;
+    // map_to_robot.header.frame_id = scan_pose_->header.frame_id;
+    // map_to_robot.header.stamp = scan_pose_->header.stamp;
+    // map_to_robot.transform.translation.x = scan_pose_->pose.position.x;
+    // map_to_robot.transform.translation.y = scan_pose_->pose.position.y;
+    // map_to_robot.transform.translation.z = scan_pose_->pose.position.z;
+    // map_to_robot.transform.rotation = scan_pose_->pose.orientation;
     // tf::Quaternion q;
     // q.setW(scan_pose_->orientation.w);
     // q.setX(scan_pose_->orientation.x);
@@ -152,9 +168,13 @@ void ObservationBuffer::bufferCloud(const sensor_msgs::msg::PointCloud2 & cloud)
     // pcl::transformPointCloud(pcl_cloud, pcl_transformed_cloud, trans);
     
     //Transform using tf2
-    tf2::doTransform(cloud, global_frame_cloud, map_to_robot);
+    if(sensor_frame_ != "base_footprint")
+      tf2::doTransform(cloud, robot_frame_cloud, *robot_to_sensor_);
+    if(sensor_frame_ != global_frame_)
+      tf2::doTransform(cloud, global_frame_cloud, *map_to_robot_);
+    else if (sensor_frame_ == global_frame_)
+      global_frame_cloud = cloud;
     global_frame_cloud.header.stamp = cloud.header.stamp;
-    
     // now we need to remove observations from the cloud that are below
     // or above our height thresholds
     sensor_msgs::msg::PointCloud2 & observation_cloud = *(observation_list_.front().cloud_);

@@ -80,12 +80,14 @@ public:
     const nav2_util::LifecycleNode::WeakPtr & parent,
     std::string topic_name,
     geometry_msgs::msg::TransformStamped::SharedPtr map_to_robot,
+    const geometry_msgs::msg::TransformStamped robot_to_sensor,
     double observation_keep_time,
     double expected_update_rate,
     double min_obstacle_height, double max_obstacle_height, double obstacle_max_range,
     double obstacle_min_range,
     double raytrace_max_range, double raytrace_min_range,
     std::string global_frame,
+    std::string robot_frame,
     std::string sensor_frame,
     tf2::Duration tf_tolerance);
 
@@ -145,11 +147,12 @@ private:
   rclcpp::Logger logger_{rclcpp::get_logger("nav2_costmap_2d")};
   //tf2_ros::Buffer & tf2_buffer_;
   geometry_msgs::msg::TransformStamped::SharedPtr map_to_robot_;
-  geometry_msgs::msg::TransformStamped::SharedPtr robot_to_sensor_;
+  const geometry_msgs::msg::TransformStamped robot_to_sensor_;
   const rclcpp::Duration observation_keep_time_;
   const rclcpp::Duration expected_update_rate_;
   rclcpp::Time last_updated_;
   std::string global_frame_;
+  std::string robot_frame_;
   std::string sensor_frame_;
   std::list<Observation> observation_list_;
   std::string topic_name_;

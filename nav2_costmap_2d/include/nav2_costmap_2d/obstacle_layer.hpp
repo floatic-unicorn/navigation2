@@ -237,6 +237,7 @@ protected:
   double min_obstacle_height_;  ///< @brief Max Obstacle Height
   double max_obstacle_height_;  ///< @brief Max Obstacle Height
   geometry_msgs::msg::TransformStamped::SharedPtr map_to_robot_;
+  //geometry_msgs::msg::TransformStamped::SharedPtr robot_to_sensor_;
   rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr scan_pose_sub_;
   /// @brief Used to project laser scans into point clouds
   laser_geometry::LaserProjection projector_;

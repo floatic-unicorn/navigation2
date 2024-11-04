@@ -46,7 +46,7 @@
 #include "pluginlib/class_list_macros.hpp"
 #include "sensor_msgs/point_cloud2_iterator.hpp"
 #include "nav2_costmap_2d/costmap_math.hpp"
-
+#include "tf2_ros/transform_listener.h"
 PLUGINLIB_EXPORT_CLASS(nav2_costmap_2d::ObstacleLayer, nav2_costmap_2d::Layer)
 
 using nav2_costmap_2d::NO_INFORMATION;
@@ -126,7 +126,7 @@ void ObstacleLayer::onInitialize()
 
   // now we need to split the topics based on whitespace which we can use a stringstream for
   std::stringstream ss(topics_string);
-
+  
   std::string source;
   map_to_robot_ = std::make_shared<geometry_msgs::msg::TransformStamped>();
   scan_pose_sub_ = node->create_subscription<geometry_msgs::msg::PoseStamped>(
@@ -190,18 +190,30 @@ void ObstacleLayer::onInitialize()
       "Creating an observation buffer for source %s, topic %s, frame %s",
       source.c_str(), topic.c_str(),
       sensor_frame.c_str());
-    
+    robot_frame = "base_footprint";
+    rclcpp::Rate tf_search_rate(1);
+    tf2_ros::Buffer tf_buffer(node->get_clock());
+    tf2_ros::TransformListener tf_listener(tf_buffer);
+    while (rclcpp::ok() && !tf_buffer.canTransform(robot_frame, sensor_frame, tf2::TimePointZero)) {
+    RCLCPP_WARN_STREAM(node->get_logger(),
+                        "No tf between " << robot_frame << " and " << sensor_frame);
+    tf_search_rate.sleep();
+    }
+    const auto robot_to_sensor = tf_buffer.lookupTransform(robot_frame, sensor_frame, tf2::TimePointZero);
+    //robot_to_sensor_ = std::make_shared<geometry_msgs::msg::TransformStamped>();
+    //robot_to_sensor_->transform = robot_to_sensor.transform;
   
     // create an observation buffer
     observation_buffers_.push_back(
       std::shared_ptr<ObservationBuffer
       >(
         new ObservationBuffer(
-          node, topic, map_to_robot_, observation_keep_time, expected_update_rate,
+          node, topic, map_to_robot_, robot_to_sensor, observation_keep_time, expected_update_rate,
           min_obstacle_height,
           max_obstacle_height, obstacle_max_range, obstacle_min_range, raytrace_max_range,
           raytrace_min_range,
           global_frame_,
+          robot_frame,
           sensor_frame, tf2::durationFromSec(transform_tolerance))));
 
     // check if we'll add this buffer to our marking observation buffers

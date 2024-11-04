@@ -58,18 +58,22 @@ ObservationBuffer::ObservationBuffer(
   const nav2_util::LifecycleNode::WeakPtr & parent,
   std::string topic_name,
   geometry_msgs::msg::TransformStamped::SharedPtr map_to_robot,
+  const geometry_msgs::msg::TransformStamped robot_to_sensor,
   double observation_keep_time,
   double expected_update_rate,
   double min_obstacle_height, double max_obstacle_height, double obstacle_max_range,
   double obstacle_min_range,
   double raytrace_max_range, double raytrace_min_range,
   std::string global_frame,
+  std::string robot_frame,
   std::string sensor_frame,
   tf2::Duration tf_tolerance)
 : map_to_robot_(map_to_robot),
+  robot_to_sensor_(robot_to_sensor),
   observation_keep_time_(rclcpp::Duration::from_seconds(observation_keep_time)),
   expected_update_rate_(rclcpp::Duration::from_seconds(expected_update_rate)),
   global_frame_(global_frame),
+  robot_frame_(robot_frame),
   sensor_frame_(sensor_frame),
   topic_name_(topic_name),
   min_obstacle_height_(min_obstacle_height), max_obstacle_height_(max_obstacle_height),
@@ -81,20 +85,6 @@ ObservationBuffer::ObservationBuffer(
   clock_ = node->get_clock();
   logger_ = node->get_logger();
   last_updated_ = node->now();
-  
-  std::string robot_frame = "base_footprint";
-
-  rclcpp::Rate tf_search_rate(1);
-  tf2_ros::Buffer tf_buffer(node->get_clock());
-  tf2_ros::TransformListener tf_listener(tf_buffer);
-  while (rclcpp::ok() && !tf_buffer.canTransform(robot_frame, sensor_frame, tf2::TimePointZero)) {
-  RCLCPP_WARN_STREAM(node->get_logger(),
-                      "No tf between " << robot_frame << " and " << sensor_frame);
-  tf_search_rate.sleep();
-  }
-  const auto robot_to_sensor = tf_buffer.lookupTransform(robot_frame, sensor_frame, tf2::TimePointZero);
-  robot_to_sensor_ = std::make_shared<geometry_msgs::msg::TransformStamped>();
-  robot_to_sensor_->transform = robot_to_sensor.transform;
 }
 
 ObservationBuffer::~ObservationBuffer()
@@ -107,15 +97,27 @@ void ObservationBuffer::bufferCloud(const sensor_msgs::msg::PointCloud2 & cloud)
   sensor_msgs::msg::PointCloud2 robot_frame_cloud;
   sensor_msgs::msg::PointCloud2 global_frame_cloud;
   geometry_msgs::msg::PointStamped global_origin;
-  geometry_msgs::msg::TransformStamped map_to_robot;
   // create a new observation on the list to be populated
   observation_list_.push_front(Observation());
-  
-  // check whether the origin frame has been set explicitly
-  
-  // or whether we should get it from the cloud
-
   try {
+    //Transform using tf2
+    
+    if(cloud.header.frame_id != robot_frame_)
+    {
+      tf2::doTransform(cloud, robot_frame_cloud, robot_to_sensor_);
+      robot_frame_cloud.header.frame_id = robot_frame_;
+    }
+    if(robot_frame_cloud.header.frame_id == robot_frame_ && robot_frame_cloud.header.frame_id != global_frame_)
+    {
+      tf2::doTransform(cloud, global_frame_cloud, *map_to_robot_);
+      global_frame_cloud.header.frame_id = global_frame_;
+    }
+    else if (robot_frame_cloud.header.frame_id == global_frame_)
+    {  
+      global_frame_cloud = cloud;
+      global_frame_cloud.header.frame_id = global_frame_;
+    }
+    global_frame_cloud.header.stamp = cloud.header.stamp;
     // given these observations come from sensors...
     // we'll need to store the origin pt of the sensor
     global_origin.header.stamp = map_to_robot_->header.stamp;
@@ -123,37 +125,6 @@ void ObservationBuffer::bufferCloud(const sensor_msgs::msg::PointCloud2 & cloud)
     global_origin.point.x = map_to_robot_->transform.translation.x;
     global_origin.point.y = map_to_robot_->transform.translation.y;
     global_origin.point.z = map_to_robot_->transform.translation.z;
-    //RCLCPP_INFO(logger_,"Obs Buffer::Scan Address %d (%.2f, %.2f)",scan_pose_.get(),scan_pose_->pose.position.x,scan_pose_->pose.position.y);
-    
-    // map_to_robot.header.frame_id = scan_pose_->header.frame_id;
-    // map_to_robot.header.stamp = scan_pose_->header.stamp;
-    // map_to_robot.transform.translation.x = scan_pose_->pose.position.x;
-    // map_to_robot.transform.translation.y = scan_pose_->pose.position.y;
-    // map_to_robot.transform.translation.z = scan_pose_->pose.position.z;
-    // map_to_robot.transform.rotation = scan_pose_->pose.orientation;
-    // tf::Quaternion q;
-    // q.setW(scan_pose_->orientation.w);
-    // q.setX(scan_pose_->orientation.x);
-    // q.setY(scan_pose_->orientation.y);
-    // q.setZ(scan_pose_->orientation.z);
-    // tf::Matrix3x3 m(q);
-    // double roll, pitch, yaw;
-    // m.getRPY(roll, pitch, yaw);
-    // double yaw = tf2::getYaw(scan_pose_->pose.orientation);
-    // Eigen::Matrix4f trans;
-    // trans = 1, 0, 0, 0,
-    //         0, 1, 0, 0,
-    //         0, 0, 1, 0,
-    //         0, 0, 0, 1;
-    // trans(0,0) = cosf(yaw);
-    // trans(0,1) = -sinf(yaw);
-    // trans(1,0) = sinf(yaw);
-    // trans(1,1) = cosf(yaw);
-    // trans(0,3) = scan_pose_->pose.position.x;
-    // trans(1,3) = scan_pose_->pose.position.y;
-    // trans(2,3) = scan_pose_->pose.position.z;
-
-    
     // make sure to pass on the raytrace/obstacle range
     // of the observation buffer to the observations
     observation_list_.front().origin_ = global_origin.point;
@@ -161,20 +132,6 @@ void ObservationBuffer::bufferCloud(const sensor_msgs::msg::PointCloud2 & cloud)
     observation_list_.front().raytrace_min_range_ = raytrace_min_range_;
     observation_list_.front().obstacle_max_range_ = obstacle_max_range_;
     observation_list_.front().obstacle_min_range_ = obstacle_min_range_;    
-    //Transform using pcl
-    // pcl::PointCloud<pcl::PointXYZ> pcl_cloud;
-    // pcl::PointCloud<pcl::PointXYZ> pcl_transformed_cloud;
-    // pcl::fromROSMsg(cloud, pcl_cloud);
-    // pcl::transformPointCloud(pcl_cloud, pcl_transformed_cloud, trans);
-    
-    //Transform using tf2
-    if(sensor_frame_ != "base_footprint")
-      tf2::doTransform(cloud, robot_frame_cloud, *robot_to_sensor_);
-    if(sensor_frame_ != global_frame_)
-      tf2::doTransform(cloud, global_frame_cloud, *map_to_robot_);
-    else if (sensor_frame_ == global_frame_)
-      global_frame_cloud = cloud;
-    global_frame_cloud.header.stamp = cloud.header.stamp;
     // now we need to remove observations from the cloud that are below
     // or above our height thresholds
     sensor_msgs::msg::PointCloud2 & observation_cloud = *(observation_list_.front().cloud_);

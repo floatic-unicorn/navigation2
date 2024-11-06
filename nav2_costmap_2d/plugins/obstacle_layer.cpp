@@ -190,16 +190,28 @@ void ObstacleLayer::onInitialize()
       "Creating an observation buffer for source %s, topic %s, frame %s",
       source.c_str(), topic.c_str(),
       sensor_frame.c_str());
+    
     robot_frame = "base_footprint";
     rclcpp::Rate tf_search_rate(1);
     tf2_ros::Buffer tf_buffer(node->get_clock());
     tf2_ros::TransformListener tf_listener(tf_buffer);
-    while (rclcpp::ok() && !tf_buffer.canTransform(robot_frame, sensor_frame, tf2::TimePointZero)) {
+    
+    while (!tf_buffer.canTransform(robot_frame, sensor_frame, tf2::TimePointZero)) {
     RCLCPP_WARN_STREAM(node->get_logger(),
                         "No tf between " << robot_frame << " and " << sensor_frame);
     tf_search_rate.sleep();
     }
+    //Check1
     const auto robot_to_sensor = tf_buffer.lookupTransform(robot_frame, sensor_frame, tf2::TimePointZero);
+    RCLCPP_INFO_STREAM(logger_, "Transform : \n " 
+                                << robot_to_sensor.transform.translation.x << "\n"
+                                << robot_to_sensor.transform.translation.y << "\n"
+                                << robot_to_sensor.transform.translation.z << "\n"
+                                << robot_to_sensor.transform.rotation.w << "\n"
+                                << robot_to_sensor.transform.rotation.x << "\n"
+                                << robot_to_sensor.transform.rotation.y << "\n"
+                                << robot_to_sensor.transform.rotation.z << "\n"); 
+
     //robot_to_sensor_ = std::make_shared<geometry_msgs::msg::TransformStamped>();
     //robot_to_sensor_->transform = robot_to_sensor.transform;
   

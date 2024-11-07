@@ -100,26 +100,19 @@ void ObservationBuffer::bufferCloud(const sensor_msgs::msg::PointCloud2 & cloud)
   // create a new observation on the list to be populated
   observation_list_.push_front(Observation());
   try {
-    //Transform using tf2
-    //Check2
-    //if(cloud.header.frame_id != robot_frame_)
-    //{
     tf2::doTransform(cloud, robot_frame_cloud, robot_to_sensor_);
     robot_frame_cloud.header.frame_id = robot_frame_;
-    RCLCPP_INFO(logger_,"Check2-1 tf ex cloud %s, cloud %s", cloud.header.frame_id.c_str(), robot_frame_cloud.header.frame_id.c_str());
-    //}
+
     if(robot_frame_cloud.header.frame_id != global_frame_)
     {
       tf2::doTransform(robot_frame_cloud, global_frame_cloud, *map_to_robot_);
       global_frame_cloud.header.frame_id = global_frame_;
-      RCLCPP_INFO(logger_,"Check2-2 cloud %s", robot_frame_cloud.header.frame_id.c_str());
     }
+    
     else if (robot_frame_cloud.header.frame_id == global_frame_)
     {  
-      
       global_frame_cloud = robot_frame_cloud;
       global_frame_cloud.header.frame_id = global_frame_;
-      RCLCPP_INFO(logger_,"Check2-3 cloud %s", robot_frame_cloud.header.frame_id.c_str());
     }
     global_frame_cloud.header.stamp = cloud.header.stamp;
     // given these observations come from sensors...

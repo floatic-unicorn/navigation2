@@ -201,20 +201,15 @@ void ObstacleLayer::onInitialize()
                         "No tf between " << robot_frame << " and " << sensor_frame);
     tf_search_rate.sleep();
     }
-    //Check1
     const auto robot_to_sensor = tf_buffer.lookupTransform(robot_frame, sensor_frame, tf2::TimePointZero);
-    RCLCPP_INFO_STREAM(logger_, "Transform : \n " 
+    RCLCPP_INFO_STREAM(logger_, robot_frame << " to " << sensor_frame <<" Transform : \n" 
                                 << robot_to_sensor.transform.translation.x << "\n"
                                 << robot_to_sensor.transform.translation.y << "\n"
                                 << robot_to_sensor.transform.translation.z << "\n"
                                 << robot_to_sensor.transform.rotation.w << "\n"
                                 << robot_to_sensor.transform.rotation.x << "\n"
                                 << robot_to_sensor.transform.rotation.y << "\n"
-                                << robot_to_sensor.transform.rotation.z << "\n"); 
-
-    //robot_to_sensor_ = std::make_shared<geometry_msgs::msg::TransformStamped>();
-    //robot_to_sensor_->transform = robot_to_sensor.transform;
-  
+                                << robot_to_sensor.transform.rotation.z << "\n");   
     // create an observation buffer
     observation_buffers_.push_back(
       std::shared_ptr<ObservationBuffer
@@ -253,18 +248,18 @@ void ObstacleLayer::onInitialize()
     // create a callback for the topic
     if (data_type == "LaserScan") {
 
-      RCLCPP_WARN(
-        logger_,
-        "obstacle_layer: LaserScan is not applicable to observation_buffer in gsj_ver.");
+      // RCLCPP_WARN(
+      //   logger_,
+      //   "obstacle_layer: LaserScan is not applicable to observation_buffer in gsj_ver.");
 
-      // auto sub = std::make_shared<message_filters::Subscriber<sensor_msgs::msg::LaserScan,
-      //     rclcpp_lifecycle::LifecycleNode>>(node, topic, custom_qos_profile, sub_opt);
-      // if (inf_is_valid) {
-      //   sub->registerCallback(std::bind(&ObstacleLayer::laserScanValidInfCallback, this, std::placeholders::_1, observation_buffers_.back()));
-      // } else {
-      //   sub->registerCallback(std::bind(&ObstacleLayer::laserScanCallback, this, std::placeholders::_1, observation_buffers_.back()));
-      // }
-      // sub->unsubscribe();
+      auto sub = std::make_shared<message_filters::Subscriber<sensor_msgs::msg::LaserScan,
+          rclcpp_lifecycle::LifecycleNode>>(node, topic, custom_qos_profile, sub_opt);
+      if (inf_is_valid) {
+        sub->registerCallback(std::bind(&ObstacleLayer::laserScanValidInfCallback, this, std::placeholders::_1, observation_buffers_.back()));
+      } else {
+        sub->registerCallback(std::bind(&ObstacleLayer::laserScanCallback, this, std::placeholders::_1, observation_buffers_.back()));
+      }
+      sub->unsubscribe();
       
       // auto filter = std::make_shared<tf2_ros::MessageFilter<sensor_msgs::msg::LaserScan>>(
       //   *sub, *tf_, global_frame_, 50,
@@ -285,11 +280,11 @@ void ObstacleLayer::onInitialize()
       //       observation_buffers_.back()));
       // }
 
-      //observation_subscribers_.push_back(sub);
+      observation_subscribers_.push_back(sub);
 
       // observation_notifiers_.push_back(filter);
       // observation_notifiers_.back()->setTolerance(rclcpp::Duration::from_seconds(0.05));
-
+    
     } else {
       sub_opt.callback_group = node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
       auto sub = std::make_shared<message_filters::Subscriber<sensor_msgs::msg::PointCloud2,

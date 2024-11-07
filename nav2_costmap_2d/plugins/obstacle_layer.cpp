@@ -138,7 +138,7 @@ void ObstacleLayer::onInitialize()
     bool inf_is_valid, clearing, marking;
 
     declareParameter(source + "." + "topic", rclcpp::ParameterValue(source));
-    declareParameter(source + "." + "sensor_frame", rclcpp::ParameterValue(std::string("")));
+    declareParameter(source + "." + "sensor_frame", rclcpp::ParameterValue(std::string("base_footprint")));
     declareParameter(source + "." + "observation_persistence", rclcpp::ParameterValue(0.0));
     declareParameter(source + "." + "expected_update_rate", rclcpp::ParameterValue(0.0));
     declareParameter(source + "." + "data_type", rclcpp::ParameterValue(std::string("LaserScan")));

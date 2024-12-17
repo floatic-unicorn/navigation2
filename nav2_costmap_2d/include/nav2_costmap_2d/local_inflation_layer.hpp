@@ -149,14 +149,14 @@ public:
   {
     unsigned char cost = 0;
     if (distance == 0) {
-      cost = INSCRIBED_INFLATED_OBSTACLE;
+      cost = LETHAL_OBSTACLE;
     } else if (distance * resolution_ <= inscribed_radius_) {
       cost = INSCRIBED_INFLATED_OBSTACLE;
     } 
     else {
       // make sure cost falls off by Euclidean distance
-      double factor = exp(-1.0 * cost_scaling_factor_ * (distance * resolution_ - inscribed_radius_));
-      cost = static_cast<unsigned char>((INSCRIBED_INFLATED_OBSTACLE - 1) * factor);
+      double factor = exp(-1.0 * cost_scaling_factor_ * (distance * resolution_/inflation_radius_));//(distance*resolution_/inflation_radius_-1)*(distance*resolution_/inflation_radius_-1);//-(distance*resolution_ / inflation_radius_ -1.0);//exp(-1.0 * cost_scaling_factor_ * (distance * resolution_/inflation_radius_));
+      cost = static_cast<unsigned char>((INSCRIBED_INFLATED_OBSTACLE - (occupied_max_cost_+1)) * factor + (occupied_max_cost_+1));
     }
     return cost;
   }
@@ -248,6 +248,8 @@ protected:
   bool inflate_unknown_, inflate_around_unknown_;
   unsigned int cell_inflation_radius_;
   unsigned int cached_cell_inflation_radius_;
+  int occupied_max_cost_;
+  
   std::vector<std::vector<CellData>> inflation_cells_;
 
   double resolution_;
